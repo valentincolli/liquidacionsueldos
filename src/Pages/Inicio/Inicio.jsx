@@ -1,7 +1,7 @@
 function Inicio() {
     return (
       <div>
-        <h1>Bienvenido a la a la Colimania</h1>
+        <h1>pagate el asado juan</h1>
       </div>
     );
   }
