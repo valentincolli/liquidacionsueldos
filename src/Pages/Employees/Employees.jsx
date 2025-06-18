@@ -27,13 +27,14 @@ function Employees(){
 
     useEffect(() => {loadEmployees();}, []);
 
-    const handleSave = async (formData) => {
-        current
-            ? await api.updateEmployee(current.legajo, formData)
-            : await api.createEmployee(formData);
-        await api.getEmployees();
-        setModalOpen(false);
-        setCurrent(null);
+    const handleSave = async (dto) => {
+        try{
+            await api.createEmployee(dto);
+            await api.getEmployees();
+            setModalOpen(false);
+        }catch(err){
+            alert('Error al registrar empleado: ' + err.message);
+        }
     };
 
     const handleDelete = async(legajo) => {
@@ -63,13 +64,14 @@ function Employees(){
                                 <thead>
                                     <tr>
                                         <th>Legajo</th>
-                                        <th>Nombre y apellido</th>
+                                        <th>Nombre</th>
                                         <th>CUIL</th>
-                                        <th>Inicio de actividad</th>
-                                        <th>Área</th>
-                                        <th>Categoria</th>
-                                        <th>Banco</th>
+                                        <th>Inicio actividad</th>
                                         <th>Domicilio</th>
+                                        <th>Banco</th>
+                                        <th>Categoria</th>
+                                        <th>Área</th>
+                                        <th>Gremio</th>
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
@@ -79,10 +81,12 @@ function Employees(){
                                             <td>{e.legajo}</td>
                                             <td>{`${e.nombre} ${e.apellido}`}</td>
                                             <td>{e.cuil}</td>
-                                            <td>{e.categoria?.nombre ?? '—'}</td>
-                                            <td>{e.area?.nombre ?? '—'}</td>
-                                            <td>{e.gremio}</td>
+                                            <td>{e.inicioActividad}</td>
+                                            <td>{e.domicilio}</td>
                                             <td>{e.banco}</td>
+                                            <td>{e.categoria}</td>
+                                            <td>{e.area}</td>
+                                            <td>{e.gremio}</td>
                                             <td>
                                                 <div className={styles.actions}>
                                                     <button

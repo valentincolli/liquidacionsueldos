@@ -10,7 +10,7 @@ function EmployeeModal({initialData, onClose, onSubmit}){
         initialData ?? {
             legajo: '', nombre: '', apellido: '', cuil: '',
             inicioActividad: '', domicilio: '', banco: '',
-            categoria: null, sexo: 'M', gremio: 'LUZ_FUERZA', area: null,
+            categoriaId: '', areaId: '', sexo: 'M', gremio: 'LUZ_Y_FUERZA',
         }
     );
 
@@ -29,7 +29,22 @@ function EmployeeModal({initialData, onClose, onSubmit}){
     
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSubmit(form);
+
+        const payload = {
+            legajo: parseInt(form.legajo, 10),
+            nombre: form.nombre.trim(),
+            apellido: form.apellido.trim(),
+            cuil: form.cuil.trim(),
+            inicioActividad: form.inicioActividad,
+            domicilio: form.domicilio.trim() || null,
+            banco: form.banco.trim() || null,
+            idCategoria: parseInt(form.categoriaId, 10),
+            idArea: parseInt(form.areaId, 10),
+            sexo: form.sexo,
+            gremio: form.gremio,
+        };
+        console.log(payload)
+        onSubmit(payload);
     };
 
     return(
@@ -86,7 +101,7 @@ function EmployeeModal({initialData, onClose, onSubmit}){
                         CUIL
                         <input
                             name="cuil"
-                            value={form.dni}
+                            value={form.cuil}
                             onChange={handleChange}
                             required
                         />
@@ -113,22 +128,22 @@ function EmployeeModal({initialData, onClose, onSubmit}){
                     </div>
                     <div className={styles.formGroup}>
                         <label>Categoría
-                        <select name="categoria" onChange={handleSelect}
-                                value={JSON.stringify(form.categoria)}>
+                        <select name="categoriaId" onChange={handleChange}
+                                value={form.categoriaId} required>
                             <option hidden value="">Seleccionar…</option>
                             {categorias.map(c =>
-                            <option key={c.id} value={JSON.stringify(c)}>{c.nombre}</option>
+                            <option key={c.idCategoria} value={c.idCategoria}>{c.nombreCategoria}</option>
                             )}
                         </select>
                         </label>
                     </div>
                     <div className={styles.formGroup}>
                         <label>Área
-                        <select name="area" onChange={handleSelect}
-                                value={JSON.stringify(form.area)}>
+                        <select name="areaId" onChange={handleChange}
+                                value={form.areaId}>
                             <option hidden value="">Seleccionar…</option>
                             {areas.map(a =>
-                            <option key={a.id} value={JSON.stringify(a)}>{a.nombre}</option>
+                            <option key={a.idArea} value={a.idArea}>{a.nombre}</option>
                             )}
                         </select>
                         </label>
