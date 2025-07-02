@@ -70,7 +70,6 @@ function Employees(){
                                         <th>Domicilio</th>
                                         <th>Banco</th>
                                         <th>Categoria</th>
-                                        <th>Área</th>
                                         <th>Gremio</th>
                                         <th>Acciones</th>
                                     </tr>
@@ -85,7 +84,6 @@ function Employees(){
                                             <td>{e.domicilio}</td>
                                             <td>{e.banco}</td>
                                             <td>{e.categoria}</td>
-                                            <td>{e.area}</td>
                                             <td>{e.gremio}</td>
                                             <td>
                                                 <div className={styles.actions}>

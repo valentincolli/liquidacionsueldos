@@ -5,7 +5,8 @@ import {
   getEmpleadoByLegajo, 
   getCategoriaById, 
   getPorcentajeArea,
-  guardarLiquidacion
+  guardarLiquidacion,
+  getConceptosAsignados
 } from '../../services/empleadosAPI';
 import { AnimatePresence } from 'framer-motion';
 import ConceptModal from '../../Components/ConceptModal/ConceptModal'
@@ -39,28 +40,50 @@ function Liquidaciones() {
       const basico = {
         id: emp.idCategoria,
         tipo: 'CATEGORIA', 
-        nombre: `Básico ${categoria.nombre}`,
+        nombre: `Básico ${categoria.nombreCategoria}`,
         montoUnitario: categoria.basico,
         cantidad: 1,
         total: categoria.basico ?? 0,
       };
+
       /*Boinificación área*/
-      const porcentaje = await getPorcentajeArea(emp.idArea, emp.idCategoria);
-      const bonoImporte = (categoria.basico * Number(porcentaje))/100;
+      const areas = (emp.idAreas || []).map((id, index) => ({
+        idArea: id,
+        nombre: emp.nombreAreas?.[index] ?? 'Área'
+      }));
+      const categoria_11 = await getCategoriaById(11);
+      const bonosDeAreas = await Promise.all(
+        areas.map(async (area)=>{
+          const porcentaje = await getPorcentajeArea(area.idArea, emp.idCategoria);
+          const bonoImporte = (categoria_11.basico * Number(porcentaje))/100;
+          return {
+            id: area.idArea,
+            tipo: 'BONIFICACION_VARIABLE',
+            nombre: `Bono de área ${area.nombre}`,
+            montoUnitario: bonoImporte,
+            cantidad: 1,
+            total: bonoImporte ?? 0,
+          };
+        })
+      );
       
-      const bonoConcepto = {
-        id: 1,
-        tipo: 'BONIFICACION_VARIABLE',
-        nombre: `Bono de Área ${emp.nombreArea}`,
-        montoUnitario: bonoImporte,
-        cantidad: 1,
-        total: bonoImporte ?? 0,
-      };
+      /*Conceptos precargados en base de datos*/
+      const conceptosAsignados = await getConceptosAsignados(emp.legajo);
+      const mappedAsignados = conceptosAsignados.map((c)=>({
+        id: c.idReferencia,
+        tipo: c.tipoConcepto,
+        nombre: c.nombre,
+        montoUnitario: c.montoUnitario,
+        cantidad: c.unidades,
+        total: c.montoUnitario * c.unidades,
+      }));
 
       /*Agregar conceptos y total*/
-      const lista = [basico, bonoConcepto];
+      const lista = [basico, ...bonosDeAreas, ...mappedAsignados];
+
       setConceptos(lista);
       setTotal(calcTotal(lista));
+
     }catch(err){
       alert('Empleado no encontrado');
       setEmpleado(null);
@@ -99,7 +122,6 @@ function Liquidaciones() {
         unidades: c.cantidad,
       })),
     };
-    console.log('DTO que envío:', JSON.stringify(payload, null, 2));
 
     try {
       const pago = await guardarLiquidacion(payload);
@@ -119,8 +141,8 @@ function Liquidaciones() {
 
         <div className={styles.searchRow}>
             <input 
-              type="number"
-              placeholder='Legajo'
+              type="input"
+              placeholder='Buscar'
               value={legajoInput}
               onChange={(e) => setLegajoInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleBuscar()}
@@ -141,7 +163,6 @@ function Liquidaciones() {
             <p><strong>CUIL:</strong> {empleado.cuil}</p>
             <p><strong>Inicio actividad:</strong> {empleado.inicioActividad}</p>
             <p><strong>Categoria:</strong> {empleado.categoria}</p>
-            <p><strong>Área:</strong> {empleado.area}</p>
             <p><strong>Banco:</strong> {empleado.banco}</p>
             <p><strong>Gremio:</strong> {empleado.gremio}</p>
             <p><strong>Sexo:</strong> {empleado.sexo}</p>

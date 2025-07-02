@@ -57,7 +57,7 @@ function Header() {
             )}
           </div>
           <button 
-            onClick={() => navigate('/panel-control')}
+            onClick={() => navigate('/convenios')}
             className={styles.navButton}
           >
             Convenios

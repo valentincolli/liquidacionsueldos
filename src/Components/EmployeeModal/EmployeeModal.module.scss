@@ -123,6 +123,19 @@
     }
   }
 
+.checkboxGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.checkboxItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+
 
 // Diseño responsive
 @media (max-width: 768px) {

@@ -1,16 +1,21 @@
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion} from 'framer-motion';
 import styles from './EmployeeModal.module.scss';
 import {getCategorias, getAreas} from '../../services/meta';
+import { getConceptos } from '../../services/empleadosAPI';
 
 function EmployeeModal({initialData, onClose, onSubmit}){
     const [categorias, setCategorias] = useState([]);
     const [areas, setAreas] = useState([]);
+    const [conceptos, setConceptos] = useState([]);
+    const [selectedConceptoId, setSelectedConceptoId] = useState('');
+    const [conceptosAsignados, setConceptosAsignados] = useState([]);
+    
     const [form, setForm] = useState(
         initialData ?? {
             legajo: '', nombre: '', apellido: '', cuil: '',
             inicioActividad: '', domicilio: '', banco: '',
-            categoriaId: '', areaId: '', sexo: 'M', gremio: 'LUZ_Y_FUERZA',
+            categoriaId: '', areaIds: [], sexo: 'M', gremio: 'LUZ_Y_FUERZA',
         }
     );
 
@@ -18,15 +23,52 @@ function EmployeeModal({initialData, onClose, onSubmit}){
         (async () =>{
             setCategorias(await getCategorias());
             setAreas(await getAreas());
+            setConceptos(await getConceptos());
         })();
     }, []);
 
     const handleChange = (e) =>
         setForm({...form, [e.target.name]: e.target.value});
 
-    const handleSelect = (e) =>
-        setForm({...form, [e.target.name]: e.target.value});
+    const handleAreaToggle = (areaId) => {
+        setForm ((prevForm) =>{
+            const current = prevForm.areaIds || [];
+            const exists = current.includes(areaId);
+            const updated = exists
+                ? current.filter((id) => id !== areaId)
+                : [...current, areaId];
+            return { ...prevForm, areaIds: updated};
+        });
+    };
+
+    const handleAddConcepto = () => {
+        if(!selectedConceptoId) return;
+        const concepto = conceptos.find(c => c.id === Number(selectedConceptoId));
+        if(!concepto) return;
+        if(conceptosAsignados.some(c => c.id === concepto.id)) return;
+
+        setConceptosAsignados([...conceptosAsignados,{
+            id: concepto.id,
+            descripcion: concepto.nombre,
+            tipo: concepto.tipoConcepto,
+            unidades: 1,
+        }]);
+
+        setSelectedConceptoId('');
+    };
     
+    const handleUnidadChange = (idx, val) => {
+        const nuevos = [...conceptosAsignados];
+        nuevos[idx].unidades = Number(val);
+        setConceptosAsignados(nuevos);
+    };
+
+    const handleRemoveConcepto = (idx) => {
+        const nuevos = [...conceptosAsignados];
+        nuevos.splice(idx, 1);
+        setConceptosAsignados(nuevos);
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
 
@@ -39,9 +81,14 @@ function EmployeeModal({initialData, onClose, onSubmit}){
             domicilio: form.domicilio.trim() || null,
             banco: form.banco.trim() || null,
             idCategoria: parseInt(form.categoriaId, 10),
-            idArea: parseInt(form.areaId, 10),
+            idAreas: form.areasIds,
             sexo: form.sexo,
             gremio: form.gremio,
+            conceptosAsignados: conceptosAsignados.map(c => ({
+                tipoConcepto: c.tipo,
+                idReferencia: c.id,
+                unidades: c.unidades,
+            })),
         };
         console.log(payload)
         onSubmit(payload);
@@ -138,17 +185,6 @@ function EmployeeModal({initialData, onClose, onSubmit}){
                         </label>
                     </div>
                     <div className={styles.formGroup}>
-                        <label>Área
-                        <select name="areaId" onChange={handleChange}
-                                value={form.areaId}>
-                            <option hidden value="">Seleccionar…</option>
-                            {areas.map(a =>
-                            <option key={a.idArea} value={a.idArea}>{a.nombre}</option>
-                            )}
-                        </select>
-                        </label>
-                    </div>
-                    <div className={styles.formGroup}>
                         <label>Sexo
                         <select name="sexo" value={form.sexo} onChange={handleChange}>
                             <option value="M">Masculino</option>
@@ -156,7 +192,6 @@ function EmployeeModal({initialData, onClose, onSubmit}){
                         </select>
                         </label>
                     </div>
-
                     <div className={styles.formGroup}>
                         <label>Gremio
                         <select name="gremio" value={form.gremio} onChange={handleChange}>
@@ -165,6 +200,62 @@ function EmployeeModal({initialData, onClose, onSubmit}){
                         </select>
                         </label>
                     </div>
+                    {/*Áreas*/}
+                    <div className={styles.formGroup}>
+                        <label>Áreas</label>
+                        <div className={styles.checkboxGroup}>
+                        {areas.map((area) =>(
+                            <label key={area.idArea} className={styles.checkboxItem}>
+                                <input
+                                    type="checkbox"
+                                    checked={form.areaIds?.includes(area.idArea)}
+                                    onChange={() => handleAreaToggle(area.idArea)}
+                                />
+                                {area.nombre}
+                            </label>
+                        ))}
+                        </div>
+                    </div>
+                    {/*Conceptos asignados*/}
+                    <div className={styles.formGroup}>
+                        <label>Agregar concepto predefinido</label>
+                        <div style={{display: 'flex', gap: '1rem'}}>
+                            <select value={selectedConceptoId} onChange={(e) => setSelectedConceptoId(e.target.value)}>
+                                <option value="">Seleccionar concepto</option>
+                                {conceptos.map(c=>(
+                                    <option key={c.id} value={c.id}>{c.nombre} ({c.tipoConcepto})</option>
+                                ))}
+                            </select>
+                            <button type="button" onClick={handleAddConcepto}>Añadir</button>
+                        </div>
+                        {conceptosAsignados.length > 0 && (
+                            <table className={styles.table}>
+                                <thead>
+                                    <tr>
+                                        <th>Concepto</th>
+                                        <th>Tipo</th>
+                                        <th>Unidades</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {conceptosAsignados.map((c, idx) =>(
+                                        <tr key={idx}>
+                                            <td>{c.nombre}</td>
+                                            <td>{c.tipo}</td>
+                                            <td>
+                                                <input type="number" min="1" value={c.unidades} onChange={(e) => handleUnidadChange(idx, e.target.value)}/>
+                                            </td>
+                                            <td>
+                                                <button type="button" onClick={() => handleRemoveConcepto(idx)}>❌</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
+                    {/*Botones*/}
                     <div className={styles.formActions}>
                         <button
                             type="button"

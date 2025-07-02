@@ -25,4 +25,16 @@ export const getConceptos = () =>
     axiosClient.get(`/bonificaciones-fijas`).then((r)=>r.data);
 
 export const guardarLiquidacion = (dto) =>
-  axiosClient.post('/liquidaciones', dto).then((r) => r.data);
+    axiosClient.post('/liquidaciones', dto).then((r) => r.data);
+
+export const getConceptosAsignados = (legajo) =>
+    axiosClient.get(`/empleado-conceptos/por-legajo/${legajo}`).then((r)=>r.data);
+
+export const getPagos = () =>
+    axiosClient.get(`/liquidaciones`).then((r)=>r.data);
+
+export const getDetallePago = (idPago) =>
+    axiosClient.get(`/liquidaciones/${idPago}`).then((r)=>r.data);
+
+export const getConvenios = () =>
+    axiosClient.get(`/convenios`).then((r)=>r.data);
