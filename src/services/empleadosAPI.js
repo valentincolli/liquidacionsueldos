@@ -7,7 +7,7 @@ export const createEmployee = (dto) =>
     axiosClient.post('empleados', dto).then((r)=>r.data);
 
 export const updateEmployee = (legajo, data) =>
-    axiosClient.put(`empleados/${legajo}`).then((r)=> r.data);
+    axiosClient.put(`empleados/${legajo}`, data).then((r)=> r.data);
 
 export const deleteEmployee = (legajo) =>
     axiosClient.delete(`empleados/${legajo}`);

@@ -6,7 +6,8 @@ import {
   getCategoriaById, 
   getPorcentajeArea,
   guardarLiquidacion,
-  getConceptosAsignados
+  getConceptosAsignados,
+  getConceptos
 } from '../../services/empleadosAPI';
 import { AnimatePresence } from 'framer-motion';
 import ConceptModal from '../../Components/ConceptModal/ConceptModal'
@@ -69,14 +70,24 @@ function Liquidaciones() {
       
       /*Conceptos precargados en base de datos*/
       const conceptosAsignados = await getConceptosAsignados(emp.legajo);
-      const mappedAsignados = conceptosAsignados.map((c)=>({
-        id: c.idReferencia,
-        tipo: c.tipoConcepto,
-        nombre: c.nombre,
-        montoUnitario: c.montoUnitario,
-        cantidad: c.unidades,
-        total: c.montoUnitario * c.unidades,
-      }));
+      const bonificacionesFijas = await getConceptos();
+
+      const mappedAsignados = conceptosAsignados.map((asignado)=>{
+        const bonificacion = bonificacionesFijas.find(b=>b.id === asignado.idReferencia);
+        
+        if(!bonificacion) return null;
+
+        const montoUnitario = (categoria_11.basico * bonificacion.porcentaje)/100;
+        
+        return{
+          id: asignado.idReferencia,
+          tipo: asignado.tipoConcepto,
+          nombre: bonificacion.nombre,
+          montoUnitario,
+          cantidad: asignado.unidades,
+          total: montoUnitario * asignado.unidades,
+        };
+      }).filter(Boolean);
 
       /*Agregar conceptos y total*/
       const lista = [basico, ...bonosDeAreas, ...mappedAsignados];

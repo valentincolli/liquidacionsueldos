@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion} from 'framer-motion';
 import styles from './EmployeeModal.module.scss';
 import {getCategorias, getAreas} from '../../services/meta';
-import { getConceptos } from '../../services/empleadosAPI';
+import { getConceptos, getConceptosAsignados } from '../../services/empleadosAPI';
 
 function EmployeeModal({initialData, onClose, onSubmit}){
     const [categorias, setCategorias] = useState([]);
@@ -20,30 +20,41 @@ function EmployeeModal({initialData, onClose, onSubmit}){
     );
 
     useEffect(() => {
-        if (initialData) {
-            setForm({
-            legajo: initialData.legajo,
-            nombre: initialData.nombre,
-            apellido: initialData.apellido,
-            cuil: initialData.cuil,
-            inicioActividad: initialData.inicioActividad,
-            domicilio: initialData.domicilio || '',
-            banco: initialData.banco || '',
-            categoriaId: String(initialData.idCategoria ?? ''),
-            areaIds: initialData.idAreas ?? [],
-            sexo: initialData.sexo || 'M',
-            gremio: initialData.gremio || 'LUZ_Y_FUERZA',
-            });
-        }
-    }, [initialData]);
-
-    useEffect(() => {
         (async () =>{
-            setCategorias(await getCategorias());
-            setAreas(await getAreas());
-            setConceptos(await getConceptos());
+            const categorias = await getCategorias();
+            const areas = await getAreas();
+            const conceptos = await getConceptos();
+            setCategorias(categorias);
+            setAreas(areas);
+            setConceptos(conceptos);
+        
+            if (initialData) {
+                setForm({
+                legajo: initialData.legajo,
+                nombre: initialData.nombre,
+                apellido: initialData.apellido,
+                cuil: initialData.cuil,
+                inicioActividad: initialData.inicioActividad,
+                domicilio: initialData.domicilio || '',
+                banco: initialData.banco || '',
+                categoriaId: String(initialData.idCategoria ?? ''),
+                areaIds: initialData.idAreas ?? [],
+                sexo: initialData.sexo || 'M',
+                gremio: initialData.gremio || 'LUZ_Y_FUERZA',
+                });
+
+                const asignados = await getConceptosAsignados(initialData.legajo);
+
+                const formateados = asignados.map(c => ({
+                    id: c.idReferencia,
+                    nombre: c.nombre || '',
+                    tipo: c.tipoConcepto,
+                    unidades: c.unidades,
+                }));
+                setConceptosAsignados(formateados);
+            }
         })();
-    }, []);
+    }, [initialData]);
 
     const handleChange = (e) =>
         setForm({...form, [e.target.name]: e.target.value});
@@ -62,6 +73,7 @@ function EmployeeModal({initialData, onClose, onSubmit}){
     const handleAddConcepto = () => {
         if(!selectedConceptoId) return;
         const concepto = conceptos.find(c => c.id === Number(selectedConceptoId));
+        console.log(concepto);
         if(!concepto) return;
         if(conceptosAsignados.some(c => c.id === concepto.id)) return;
 
@@ -103,13 +115,13 @@ function EmployeeModal({initialData, onClose, onSubmit}){
             sexo: form.sexo,
             gremio: form.gremio,
             conceptosAsignados: conceptosAsignados.map(c => ({
-                tipoConcepto: c.tipo,
+                tipoConcepto: 'BONIFICACION_FIJA',
                 idReferencia: c.id,
                 unidades: c.unidades,
             })),
         };
-        console.log(payload)
-        onSubmit(payload);
+        console.log(payload);
+        onSubmit(payload, !!initialData);
     };
 
     return(

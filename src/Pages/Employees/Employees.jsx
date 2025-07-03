@@ -39,20 +39,19 @@ function Employees(){
         );
     },[search, employees]);
 
-    const handleSave = async (dto) => {
+    const handleSave = async (dto, isEdit) => {
         try{
-            await api.createEmployee(dto);
+            if(isEdit){
+                await api.updateEmployee(dto.legajo, dto);
+            }
+            else{
+                await api.createEmployee(dto);
+            }
             await api.getEmployees();
             setModalOpen(false);
         }catch(err){
             alert('Error al registrar empleado: ' + err.message);
         }
-    };
-
-    const handleDelete = async(legajo) => {
-        if(!window.confirm('¿Dar de baja empleado?'))return;
-        await api.deleteEmployee(legajo);
-        await api.getEmployees();
     };
 
     return(
