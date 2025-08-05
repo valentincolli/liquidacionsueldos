@@ -1,0 +1,217 @@
+@import '../../main.scss';
+
+.dashboard {
+  padding: $spacing-6;
+
+  .dashboard-header {
+    margin-bottom: $spacing-8;
+
+    .title {
+      font-size: $font-size-3xl;
+      font-weight: 700;
+      margin-bottom: $spacing-2;
+      @extend .title-gradient;
+      @extend .animated-title;
+    }
+
+    .subtitle {
+      color: $color-gray-500;
+    }
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: $spacing-6;
+    margin-bottom: $spacing-8;
+
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @media (min-width: 1024px) {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .stat-card {
+      background-color: $color-white;
+      border: 1px solid $color-gray-200;
+      border-radius: $border-radius-lg;
+      box-shadow: $shadow-sm;
+
+      .stat-header {
+        padding: $spacing-4;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: none;
+
+        .stat-title {
+          font-size: $font-size-sm;
+          font-weight: 500;
+          color: $color-gray-700;
+        }
+
+        .stat-icon {
+          width: 1rem;
+          height: 1rem;
+          color: $color-gray-400;
+        }
+      }
+
+      .stat-content {
+        padding: 0 $spacing-4 $spacing-4;
+
+        .stat-value {
+          font-size: $font-size-2xl;
+          font-weight: 700;
+          margin-bottom: $spacing-1;
+        }
+
+        .stat-change {
+          font-size: $font-size-xs;
+
+          &.positive {
+            color: $color-success;
+          }
+
+          &.negative {
+            color: $color-warning;
+          }
+        }
+      }
+    }
+  }
+
+  .main-grid {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: $spacing-6;
+
+    @media (min-width: 1024px) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .activity-section {
+      @media (min-width: 1024px) {
+        grid-column: span 2 / span 2;
+      }
+
+      .activity-list {
+        display: flex;
+        flex-direction: column;
+        gap: $spacing-4;
+
+        .activity-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: $spacing-4;
+          border: 1px solid $color-gray-200;
+          border-radius: $border-radius-lg;
+          transition: background-color 0.15s ease;
+
+          &:hover {
+            background-color: rgba(243, 244, 246, 0.5);
+          }
+
+          .activity-info {
+            flex: 1;
+
+            .activity-action {
+              font-weight: 500;
+              margin-bottom: $spacing-1;
+            }
+
+            .activity-employee {
+              font-size: $font-size-sm;
+              color: $color-gray-500;
+            }
+          }
+
+          .activity-details {
+            text-align: right;
+
+            .activity-amount {
+              font-weight: 600;
+              color: $color-success;
+              margin-bottom: $spacing-1;
+            }
+
+            .activity-time {
+              font-size: $font-size-xs;
+              color: $color-gray-500;
+            }
+          }
+        }
+      }
+    }
+
+    .quick-actions {
+      .actions-list {
+        display: flex;
+        flex-direction: column;
+        gap: $spacing-3;
+
+        .action-btn {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: $spacing-3;
+          border: 1px solid;
+          border-radius: $border-radius-lg;
+          background: transparent;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          text-decoration: none;
+          font-weight: 500;
+
+          &.primary {
+            border-color: $color-green-primary;
+            color: $color-green-primary;
+
+            &:hover {
+              background-color: $color-green-primary;
+              color: $color-white;
+            }
+          }
+
+          &.success {
+            border-color: $color-success;
+            color: $color-success;
+
+            &:hover {
+              background-color: $color-success;
+              color: $color-white;
+            }
+          }
+
+          &.warning {
+            border-color: $color-warning;
+            color: $color-warning;
+
+            &:hover {
+              background-color: $color-warning;
+              color: $color-gray-900;
+            }
+          }
+
+          &.secondary {
+            border-color: $color-gray-300;
+            color: $color-gray-700;
+
+            &:hover {
+              background-color: $color-gray-100;
+            }
+          }
+
+          .action-icon {
+            width: 1rem;
+            height: 1rem;
+          }
+        }
+      }
+    }
+  }
+}

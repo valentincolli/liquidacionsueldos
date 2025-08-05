@@ -1,65 +1,79 @@
-import { useEffect, useState } from "react";
-import styles from './Convenios.module.scss';
-import {getConvenios} from '../../services/empleadosAPI';
-import Header from "../../Components/Header/Header";
+import React from 'react';
+import { FileText, Plus, Settings } from 'lucide-react';
 
-function Convenios(){
-    const[convenios,setConvenios]=useState([]);
-    const[areas,setAreas]=useState([]);
-
-    useEffect(() =>{
-        (async () => {
-            const data = await getConvenios();
-            setConvenios(data);
-
-            //Extraer los nombres de las areas
-            const nombresAreas = new Set();
-            data.forEach((fila) =>{
-                Object.keys(fila.montosPorArea || {}).forEach(area => nombresAreas.add(area));
-            });
-            setAreas([...nombresAreas]);
-        })();
-    }, []);
-
-    return(
-        <div className={styles.conveniosContainer}>
-            <Header/>
-            <main className={styles.mainContent}>
-                <div className={styles.headerRow}>
-                    <h2>Convenios Luz y fuerza</h2>
-                </div>
-                <table className={styles.conveniosTable}>
-                    <thead>
-                        <tr>
-                            <th rowSpan="2">Categoría</th>
-                            <th rowSpan="2">Básico</th>
-                            <th colSpan={areas.length}>Bonificacion áreas</th>
-                        </tr>
-                        <tr>
-                            {areas.map(area =>(
-                                <th key={area}>{area}</th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {convenios.map((fila, idx) =>(
-                            <tr key={idx}>
-                                <td>{fila.nombreCategoria}</td>
-                                <td>${Number(fila.basico)}</td>
-                                {areas.map(area =>(
-                                    <td key={area}>
-                                        {fila.montosPorArea[area] 
-                                        ? `$${Number(fila.montosPorArea[area]).toLocaleString(undefined, { minimumFractionDigits: 2 })}` 
-                                        : ''}
-                                    </td>
-                                ))}
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </main>
+export default function Convenios() {
+  return (
+    <div className="placeholder-page">
+      {/* Header */}
+      <div className="page-header">
+        <div className="header-content">
+          <h1 className="title title-gradient animated-title">
+            Gestión de Convenios
+          </h1>
+          <p className="subtitle">
+            Administra los convenios colectivos de trabajo y sus escalas salariales
+          </p>
         </div>
-    );
-}
+        <button className="add-btn">
+          <Plus className="btn-icon" />
+          Nuevo Convenio
+        </button>
+      </div>
 
-export default Convenios;
+      {/* Placeholder Content */}
+      <div className="main-content">
+        <div className="card main-section">
+          <div className="card-header section-header">
+            <h2 className="section-title section-title-effect">
+              <FileText className="title-icon" />
+              Convenios Activos
+            </h2>
+            <p className="section-description">
+              Lista de todos los convenios colectivos vigentes
+            </p>
+          </div>
+          <div className="card-content">
+            <div className="placeholder-content">
+              <FileText className="placeholder-icon" />
+              <h3 className="placeholder-title">Página en Desarrollo</h3>
+              <p className="placeholder-description">
+                Esta sección estará disponible próximamente. Aquí podrás gestionar todos los convenios colectivos de trabajo.
+              </p>
+              <p className="placeholder-note">
+                Continúa desarrollando la aplicación para completar esta funcionalidad.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="card sidebar-section">
+          <div className="card-header section-header">
+            <h2 className="section-title section-title-effect">
+              <Settings className="title-icon" />
+              Configuración
+            </h2>
+            <p className="section-description">
+              Próximas funcionalidades
+            </p>
+          </div>
+          <div className="card-content">
+            <div className="features-list">
+              <div className="feature-item">
+                <h4 className="feature-title">Escalas Salariales</h4>
+                <p className="feature-description">Gestión de escalas por convenio</p>
+              </div>
+              <div className="feature-item">
+                <h4 className="feature-title">Categorías</h4>
+                <p className="feature-description">Administrar categorías laborales</p>
+              </div>
+              <div className="feature-item">
+                <h4 className="feature-title">Actualizaciones</h4>
+                <p className="feature-description">Historial de cambios en convenios</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
