@@ -46,7 +46,7 @@ export default function Sidebar() {
           {!collapsed && (
             <div className="brand">
               <DollarSign className="brand-icon" />
-              <h1 className="brand-text">PayrollPro</h1>
+              <h1 className="brand-text">Liq. Sueldos</h1>
             </div>
           )}
           {collapsed && (
