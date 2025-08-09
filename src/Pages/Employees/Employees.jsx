@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Plus, Filter, MoreHorizontal, Eye, Edit, DollarSign, FileText } from 'lucide-react';
+import * as api from '../../services/empleadosAPI';
 import { Dropdown, DropdownItem } from '../../Components/Dropdown/Dropdown';
 import { EmployeeViewModal } from '../../Components/EmployeeViewModal.jsx';
 import { EmployeeEditModal } from '../../Components/EmployeeEditModal.jsx';

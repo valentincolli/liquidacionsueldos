@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import './Dropdown.module.scss';
+import styles from './Dropdown.module.scss';
 
 export function Dropdown({ trigger, children, align = 'right' }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -34,9 +34,9 @@ export function Dropdown({ trigger, children, align = 'right' }) {
   }, [isOpen]);
 
   return (
-    <div className="dropdown" ref={dropdownRef}>
+    <div className={styles.dropdown} ref={dropdownRef}>
       <div
-        className="dropdown-trigger"
+        className={styles['dropdown-trigger']}
         onClick={() => setIsOpen(!isOpen)}
         aria-haspopup="true"
         aria-expanded={isOpen}
@@ -45,8 +45,8 @@ export function Dropdown({ trigger, children, align = 'right' }) {
       </div>
       
       {isOpen && (
-        <div className={`dropdown-content ${align}`}>
-          <div className="dropdown-items">
+        <div className={`${styles['dropdown-content']} ${styles[align]}`}>
+      <div className={styles['dropdown-items']}>
             {children}
           </div>
         </div>
@@ -58,14 +58,14 @@ export function Dropdown({ trigger, children, align = 'right' }) {
 export function DropdownItem({ children, onClick, icon: Icon, className = '' }) {
   return (
     <button
-      className={`dropdown-item ${className}`}
+      className={`${styles['dropdown-item']} ${className}`}
       onClick={(e) => {
         e.stopPropagation();
         onClick && onClick();
       }}
     >
-      {Icon && <Icon className="dropdown-item-icon" />}
-      <span className="dropdown-item-text">{children}</span>
+      {Icon && <Icon className={styles['dropdown-item-icon']} />}
+      <span className={styles['dropdown-item-text']}>{children}</span>
     </button>
   );
 }

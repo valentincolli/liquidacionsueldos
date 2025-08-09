@@ -1,6 +1,6 @@
 import React from 'react';
 import { Calculator, Plus, TrendingUp, Clock } from 'lucide-react';
-// import '../Pages/Liquidaciones/Liquidaciones.module.scss';
+import '../../PlaceHolder.scss';
 
 export default function Liquidacion() {
   return (

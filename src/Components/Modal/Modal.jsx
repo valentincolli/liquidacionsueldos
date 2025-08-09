@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
-import './Modal.module.scss';
+import styles from './Modal.module.scss';
 
 export function Modal({ 
   isOpen, 
@@ -32,27 +32,27 @@ export function Modal({
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className={styles['modal-overlay']} onClick={onClose}>
       <div 
-        className={`modal-content ${size} ${className}`}
+        className={`${styles['modal-content']} ${size === 'large' ? styles['large'] : ''} ${className}`}
         onClick={(e) => e.stopPropagation()}
       >
         {(title || showCloseButton) && (
-          <div className="modal-header">
-            {title && <h2 className="modal-title">{title}</h2>}
+          <div className={styles['modal-header']}>
+            {title && <h2 className={styles['modal-title']}>{title}</h2>}
             {showCloseButton && (
               <button
-                className="modal-close-btn"
+                className={styles['modal-close-btn']}
                 onClick={onClose}
                 aria-label="Cerrar modal"
               >
-                <X className="close-icon" />
+                <X className={styles['close-icon']} />
               </button>
             )}
           </div>
         )}
         
-        <div className="modal-body">
+        <div className={styles['modal-body']}>
           {children}
         </div>
       </div>
@@ -62,7 +62,7 @@ export function Modal({
 
 export function ModalFooter({ children, className = '' }) {
   return (
-    <div className={`modal-footer ${className}`}>
+    <div className={`${styles['modal-footer']} ${className}`}>
       {children}
     </div>
   );

@@ -1,5 +1,6 @@
 import React from 'react';
 import { FileText, Plus, Settings } from 'lucide-react';
+import '../../PlaceHolder.scss';
 
 export default function Convenios() {
   return (
