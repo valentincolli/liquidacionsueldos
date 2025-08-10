@@ -359,7 +359,7 @@ export function EmployeeEditModal({ isOpen, onClose, employee, onSave }) {
       <ModalFooter>
         <button 
           type="button" 
-          className={`${styles['btn']} ${styles['btn-secondary']}`}
+          className={`${styles['btn']} ${styles['btn-cancel']}`}
           onClick={onClose}
           disabled={isLoading}
         >

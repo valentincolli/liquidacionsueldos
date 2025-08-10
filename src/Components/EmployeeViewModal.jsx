@@ -149,12 +149,6 @@ export function EmployeeViewModal({ isOpen, onClose, employee, onLiquidarSueldo,
           </button>
         </div>
       </div>
-
-      <ModalFooter>
-        <button className={`${styles['btn']} ${styles['btn-secondary']}`} onClick={onClose}>
-          Cerrar
-        </button>
-      </ModalFooter>
     </Modal>
   );
 }

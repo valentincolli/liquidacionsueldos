@@ -1,6 +1,7 @@
 import React from 'react';
-import { Calculator, Plus, TrendingUp, Clock } from 'lucide-react';
+import { Calculator, Plus, TrendingUp, Clock, History, Settings } from 'lucide-react';
 import '../../PlaceHolder.scss';
+import './Liquidacion.scss'
 
 export default function Liquidacion() {
   return (
@@ -78,34 +79,32 @@ export default function Liquidacion() {
           </div>
         </div>
 
-        <div className="card sidebar-section">
-          <div className="card-header section-header">
-            <h2 className="section-title section-title-effect">
-              <TrendingUp className="title-icon" />
-              Acciones Rápidas
-            </h2>
-            <p className="section-description">
+        {/* Quick Actions */}
+        <div className="card quick-actions">
+          <div className="card-header">
+            <h2 className="card-title section-title-effect">Acciones Rápidas</h2>
+            <p className="card-description">
               Próximas funcionalidades
             </p>
           </div>
           <div className="card-content">
-            <div className="features-list">
-              <div className="feature-item">
-                <h4 className="feature-title">Procesar Liquidación</h4>
-                <p className="feature-description">Calcular sueldos automáticamente</p>
-              </div>
-              <div className="feature-item">
-                <h4 className="feature-title">Generar Reportes</h4>
-                <p className="feature-description">Exportar resúmenes y recibos</p>
-              </div>
-              <div className="feature-item">
-                <h4 className="feature-title">Historial</h4>
-                <p className="feature-description">Ver liquidaciones anteriores</p>
-              </div>
-              <div className="feature-item">
-                <h4 className="feature-title">Configuración</h4>
-                <p className="feature-description">Ajustar parámetros de cálculo</p>
-              </div>
+            <div className="actions-list">
+              <button className="action-btn primary">
+                <span>Procesar Liquidación</span>
+                <Calculator className="action-icon" />
+              </button>
+              <button className="action-btn success">
+                <span>Generar Reportes</span>
+                <TrendingUp className="action-icon" />
+              </button>
+              <button className="action-btn warning">
+                <span>Historial</span>
+                <History className="action-icon" />
+              </button>
+              <button className="action-btn secondary">
+                <span>Configuración</span>
+                <Settings className="action-icon" />
+              </button>
             </div>
           </div>
         </div>

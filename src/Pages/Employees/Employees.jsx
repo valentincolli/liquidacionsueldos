@@ -67,6 +67,54 @@ export default function Empleados() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [employeeList, setEmployeeList] = useState(employees);
 
+  /*const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [current, setCurrent] = useState(null);
+  const [search, setSearch] = useState ('');
+  const [filtered, setFiltered] = useState('');
+
+  const loadEmployees = async () => {
+      try {
+          setLoading(true);
+          const data = await api.getEmployees();
+          setEmployees(data);
+          setError('');
+      } catch(err){
+          setError(err.message);
+      } finally {
+          setLoading(false);
+      }
+  };
+
+  useEffect(() => {loadEmployees();}, []);
+
+  useEffect(() =>{
+      const lower = search.toLowerCase();
+      setFiltered(
+          employees.filter(e=>
+              e.legajo.toString().includes(search) ||
+          `${e.nombre} ${e.apellido}`.toLowerCase().includes(lower)
+          )
+      );
+  },[search, employees]);
+
+  const handleSave = async (dto, isEdit) => {
+      try{
+          if(isEdit){
+              await api.updateEmployee(dto.legajo, dto);
+          }
+          else{
+              await api.createEmployee(dto);
+          }
+          await api.getEmployees();
+          setModalOpen(false);
+      }catch(err){
+          alert('Error al registrar empleado: ' + err.message);
+      }
+  };*/
+
   const departments = ['Todos', ...Array.from(new Set(employeeList.map(emp => emp.department)))];
 
   const filteredEmployees = employeeList.filter(employee => {

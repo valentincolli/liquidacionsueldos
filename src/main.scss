@@ -6,6 +6,9 @@ $color-green-light: #4ade80;
 $color-yellow-primary: #eab308;
 $color-yellow-dark: #ca8a04;
 $color-yellow-light: #fde047;
+$color-red-primary: #ef4444;
+$color-red-dark: #dc2626;
+$color-red-light: #f87171;
 
 // Gray shades
 $color-gray-50: #f9fafb;
@@ -450,6 +453,15 @@ body {
 
     &:hover {
       background-color: $color-green-dark;
+    }
+  }
+
+  &.btn-cancel {
+    background-color: $color-red-primary;
+    color: $color-white;
+
+    &:hover {
+      background-color: $color-red-dark;
     }
   }
 
