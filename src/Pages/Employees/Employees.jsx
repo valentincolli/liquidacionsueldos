@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Filter, MoreHorizontal, Eye, Edit, DollarSign, FileText } from 'lucide-react';
+import { Search, Plus, Filter, MoreHorizontal, Eye, Edit, DollarSign, FileText, UserX } from 'lucide-react';
 import * as api from '../../services/empleadosAPI';
 import { Dropdown, DropdownItem } from '../../Components/Dropdown/Dropdown';
 import { EmployeeViewModal } from '../../Components/EmployeeViewModal.jsx';
 import { EmployeeEditModal } from '../../Components/EmployeeEditModal.jsx';
+import { Tooltip } from '../../Components/Tooltip/Tooltip.jsx';
 import './Employees.scss';
 
 const employees = [
@@ -138,6 +139,12 @@ export default function Empleados() {
     }
   };
 
+  const handleDeactivateEmployee = (employee) => {
+    console.log('Dar de baja empleado:', employee.name);
+    setShowViewModal(false);
+    // Aquí podrías redirigir a la página de liquidación o abrir otro modal
+  };
+
   const handleViewEmployee = (employee) => {
     setSelectedEmployee(employee);
     setShowViewModal(true);
@@ -185,6 +192,10 @@ export default function Empleados() {
             Administra la información y datos de todos los empleados
           </p>
         </div>
+        <button className="add-employee-btn">
+          <FileText className="btn-icon" />
+          Exportar Lista
+        </button>
         <button className="add-employee-btn">
           <Plus className="btn-icon" />
           Nuevo Empleado
@@ -283,27 +294,43 @@ export default function Empleados() {
                   </div>
                 </div>
                 <div className="employee-actions">
-                  <Dropdown
-                    trigger={
-                      <button className="actions-trigger">
-                        <MoreHorizontal className="actions-icon" />
-                      </button>
-                    }
-                    align="right"
-                  >
-                    <DropdownItem
-                      icon={Eye}
+                <Tooltip content="Ver detalles del empleado" position="top">
+                    <button
+                      className="action-icon-button view-action"
                       onClick={() => handleViewEmployee(employee)}
                     >
-                      Ver
-                    </DropdownItem>
-                    <DropdownItem
-                      icon={Edit}
+                      <Eye className="action-icon" />
+                    </button>
+                  </Tooltip>
+
+                  <Tooltip content="Editar empleado" position="top">
+                    <button
+                      className="action-icon-button edit-action"
                       onClick={() => handleEditEmployee(employee)}
                     >
-                      Editar
-                    </DropdownItem>
-                  </Dropdown>
+                      <Edit className="action-icon" />
+                    </button>
+                  </Tooltip>
+
+                  <Tooltip content="Liquidar sueldo" position="top">
+                    <button
+                      className="action-icon-button liquidate-action"
+                      onClick={() => handleLiquidarSueldo(employee)}
+                    >
+                      <DollarSign className="action-icon" />
+                    </button>
+                  </Tooltip>
+
+                  {employee.status === 'Activo' && (
+                    <Tooltip content="Dar de baja empleado" position="top">
+                      <button
+                        className="action-icon-button deactivate-action"
+                        onClick={() => handleDeactivateEmployee(employee)}
+                      >
+                        <UserX className="action-icon" />
+                      </button>
+                    </Tooltip>
+                  )}
                 </div>
               </div>
             ))}
