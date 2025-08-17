@@ -75,3 +75,10 @@
     font-size: 0.95rem;
   }
 }
+
+// Grid para mostrar las cards de convenios una al lado de la otra
+.convenios-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: $spacing-6;
+}
