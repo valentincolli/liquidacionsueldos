@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, ModalFooter } from './Modal';
+import { Modal, ModalFooter } from './Modal/Modal';
 import { Plus, Edit, Trash, DollarSign, TrendingUp, TrendingDown, Save } from 'lucide-react';
 
 export function EmployeeConceptsModal({ isOpen, onClose, employee, onSave }) {

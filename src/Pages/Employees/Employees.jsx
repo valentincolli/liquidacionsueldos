@@ -4,6 +4,8 @@ import * as api from '../../services/empleadosAPI';
 import { Dropdown, DropdownItem } from '../../Components/Dropdown/Dropdown';
 import { EmployeeViewModal } from '../../Components/EmployeeViewModal.jsx';
 import { EmployeeEditModal } from '../../Components/EmployeeEditModal.jsx';
+import { EmployeeConceptsModal } from '../../Components/EmployeeConceptsModal.jsx';
+import { NewEmployeeModal } from '../../Components/NewEmployeeModal.jsx';
 import { Tooltip } from '../../Components/Tooltip/Tooltip.jsx';
 import './Employees.scss';
 
@@ -63,9 +65,13 @@ const employees = [
 export default function Empleados() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('Todos');
+  const [selectedStatus, setSelectedStatus] = useState('Todos');
+  const [selectedConvenio, setSelectedConvenio] = useState('Todos');
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showConceptsModal, setShowConceptsModal] = useState(false);
+  const [showNewEmployeeModal, setShowNewEmployeeModal] = useState(false);
   const [employeeList, setEmployeeList] = useState(employees);
 
   /*const [employees, setEmployees] = useState([]);
@@ -117,13 +123,18 @@ export default function Empleados() {
   };*/
 
   const departments = ['Todos', ...Array.from(new Set(employeeList.map(emp => emp.department)))];
+  const statuses = ['Todos', 'Activo', 'Inactivo', 'Licencia'];
+  const convenios = ['Todos', ...Array.from(new Set(employeeList.map(emp => emp.convenio || 'Convenio General')))];
 
   const filteredEmployees = employeeList.filter(employee => {
     const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          employee.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          employee.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesDepartment = selectedDepartment === 'Todos' || employee.department === selectedDepartment;
-    return matchesSearch && matchesDepartment;
+    const matchesStatus = selectedStatus === 'Todos' || employee.status === selectedStatus;
+    const matchesConvenio = selectedConvenio === 'Todos' || (employee.convenio || 'Convenio General') === selectedConvenio;
+
+    return matchesSearch && matchesDepartment && matchesStatus && matchesConvenio;
   });
 
   const getStatusClass = (status) => {
@@ -139,12 +150,6 @@ export default function Empleados() {
     }
   };
 
-  const handleDeactivateEmployee = (employee) => {
-    console.log('Dar de baja empleado:', employee.name);
-    setShowViewModal(false);
-    // Aquí podrías redirigir a la página de liquidación o abrir otro modal
-  };
-
   const handleViewEmployee = (employee) => {
     setSelectedEmployee(employee);
     setShowViewModal(true);
@@ -155,17 +160,14 @@ export default function Empleados() {
     setShowEditModal(true);
   };
 
-  const handleSaveEmployee = (updatedEmployee) => {
-    setEmployeeList(prev =>
-      prev.map(emp => emp.id === updatedEmployee.id ? updatedEmployee : emp)
-    );
-    console.log('Empleado actualizado:', updatedEmployee);
-  };
-
   const handleLiquidarSueldo = (employee) => {
     console.log('Liquidar sueldo para:', employee.name);
-    setShowViewModal(false);
     // Aquí podrías redirigir a la página de liquidación o abrir otro modal
+  };
+
+  const handleConceptos = (employee) => {
+    setSelectedEmployee(employee);
+    setShowConceptsModal(true);
   };
 
   const handleHistorialLiquidaciones = (employee) => {
@@ -174,9 +176,45 @@ export default function Empleados() {
     // Aquí podrías abrir un modal con el historial o redirigir
   };
 
+  const handleSaveEmployee = (updatedEmployee) => {
+    setEmployeeList(prev =>
+      prev.map(emp => emp.id === updatedEmployee.id ? updatedEmployee : emp)
+    );
+    if (window.showNotification) {
+      window.showNotification(`Empleado ${updatedEmployee.name} actualizado exitosamente`, 'success');
+    }
+    console.log('Empleado actualizado:', updatedEmployee);
+  };
+
+  const handleNewEmployee = (newEmployee) => {
+    setEmployeeList(prev => [...prev, newEmployee]);
+    if (window.showNotification) {
+      window.showNotification(`Empleado ${newEmployee.name} agregado exitosamente`, 'success');
+    }
+    console.log('Nuevo empleado agregado:', newEmployee);
+  };
+
+  const handleDeactivateEmployee = (employee) => {
+    if (window.confirm(`¿Está seguro de que desea dar de baja a ${employee.name}?`)) {
+      setEmployeeList(prev =>
+        prev.map(emp =>
+          emp.id === employee.id
+            ? { ...emp, status: 'Inactivo' }
+            : emp
+        )
+      );
+      if (window.showNotification) {
+        window.showNotification(`Empleado ${employee.name} dado de baja`, 'info');
+      }
+      console.log('Empleado dado de baja:', employee.name);
+    }
+  };
+
   const closeModals = () => {
     setShowViewModal(false);
     setShowEditModal(false);
+    setShowConceptsModal(false);
+    setShowNewEmployeeModal(false);
     setSelectedEmployee(null);
   };
 
@@ -192,11 +230,11 @@ export default function Empleados() {
             Administra la información y datos de todos los empleados
           </p>
         </div>
-        <button className="add-employee-btn">
+        <button className="add-employee-btn" >
           <FileText className="btn-icon" />
           Exportar Lista
         </button>
-        <button className="add-employee-btn">
+        <button className="add-employee-btn" onClick={() => setShowNewEmployeeModal(true)}>
           <Plus className="btn-icon" />
           Nuevo Empleado
         </button>
@@ -339,16 +377,30 @@ export default function Empleados() {
       </div>
 
       {/* Modales */}
+      <NewEmployeeModal
+        isOpen={showNewEmployeeModal}
+        onClose={closeModals}
+        onSave={handleNewEmployee}
+      />
+
       <EmployeeViewModal
         isOpen={showViewModal}
         onClose={closeModals}
         employee={selectedEmployee}
+        onConceptos={handleConceptos}
         onLiquidarSueldo={handleLiquidarSueldo}
         onHistorialLiquidaciones={handleHistorialLiquidaciones}
       />
 
       <EmployeeEditModal
         isOpen={showEditModal}
+        onClose={closeModals}
+        employee={selectedEmployee}
+        onSave={handleSaveEmployee}
+      />
+
+      <EmployeeConceptsModal
+        isOpen={showConceptsModal}
         onClose={closeModals}
         employee={selectedEmployee}
         onSave={handleSaveEmployee}

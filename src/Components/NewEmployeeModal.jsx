@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, ModalFooter } from './Modal';
+import { Modal, ModalFooter } from './Modal/Modal';
 import { User, Building, DollarSign, Save, X, UserPlus } from 'lucide-react';
 
 export function NewEmployeeModal({ isOpen, onClose, onSave }) {

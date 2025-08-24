@@ -1,7 +1,42 @@
 import { Users, FileText, Calculator, TrendingUp, DollarSign, Clock } from 'lucide-react';
 import './Dashboard.scss';
+import { ProcessPayrollModal } from '../../Components/ProcessPayrollModal/ProcessPayrollModal';
+import { NewEmployeeModal } from '../../Components/NewEmployeeModal';
+import '../../Components/ProcessPayrollModal/ProcessPayrollModal.scss';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const [showProcessModal, setShowProcessModal] = useState(false);
+  const [showNewEmployeeModal, setShowNewEmployeeModal] = useState(false);
+
+  const handleNewLiquidation = () => {
+    setShowProcessModal(true);
+  };
+
+  const handleNewEmployee = () => {
+    setShowNewEmployeeModal(true);
+  };
+
+  const handleViewReports = () => {
+    console.log('Navegando a reportes...');
+    // Aquí puedes navegar a una página de reportes o abrir un modal
+  };
+
+  const handleManageConvenios = () => {
+    navigate('/convenios');
+  };
+
+  const handleProcessPayroll = (result) => {
+    console.log('Procesamiento desde Dashboard:', result);
+    // Aquí puedes actualizar los stats o navegar a liquidación
+  };
+
+  const handleSaveEmployee = (newEmployee) => {
+    console.log('Nuevo empleado desde Dashboard:', newEmployee);
+    // Aquí puedes actualizar la lista global o navegar a empleados
+  };
   const stats = [
     {
       title: 'Total Empleados',
@@ -147,11 +182,11 @@ export default function Dashboard() {
           </div>
           <div className="card-content">
             <div className="actions-list">
-              <button className="action-btn primary">
+              <button className="action-btn primary" onClick={handleNewLiquidation}>
                 <span>Nueva Liquidación</span>
                 <Calculator className="action-icon" />
               </button>
-              <button className="action-btn success">
+              <button className="action-btn success"onClick={handleNewEmployee}>
                 <span>Agregar Empleado</span>
                 <Users className="action-icon" />
               </button>
@@ -167,6 +202,18 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      {/* Modals */}
+      <ProcessPayrollModal
+        isOpen={showProcessModal}
+        onClose={() => setShowProcessModal(false)}
+        onProcess={handleProcessPayroll}
+      />
+
+      <NewEmployeeModal
+        isOpen={showNewEmployeeModal}
+        onClose={() => setShowNewEmployeeModal(false)}
+        onSave={handleSaveEmployee}
+      />
     </div>
   );
 }

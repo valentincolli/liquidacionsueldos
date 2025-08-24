@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { Calculator, Plus, TrendingUp, Clock, History, Settings, Search, FileText, Users, Printer, Download, Eye, Calendar } from 'lucide-react';
 import '../../PlaceHolder.scss';
 import './Liquidacion.scss'
+import { ProcessPayrollModal } from '../../Components/ProcessPayrollModal/ProcessPayrollModal';
+import { Modal, ModalFooter } from '../../Components/Modal/Modal';
+import '../../Components/ProcessPayrollModal/ProcessPayrollModal.scss';
 
 // Mock data for recent individual payrolls
 const recentPayrolls = [
@@ -127,6 +130,11 @@ export default function Liquidacion() {
     return matchesSearch && matchesStatus;
   });
 
+  const pendingCount = payrollList.filter(p => p.status === 'Pendiente').length;
+  const completedCount = payrollList.filter(p => p.status === 'Procesada').length;
+  const totalMonthAmount = payrollList.reduce((sum, p) => sum + p.netSalary, 0);
+
+
   return (
     <div className="placeholder-page">
       {/* Header */}
@@ -139,7 +147,7 @@ export default function Liquidacion() {
             Procesa y gestiona las liquidaciones de sueldos de los empleados
           </p>
         </div>
-        <button className="add-btn">
+        <button className="add-btn" onClick={() => setShowProcessModal(true)}>
           <Plus className="btn-icon" />
           Nueva Liquidación
         </button>
@@ -337,6 +345,124 @@ export default function Liquidacion() {
           </div>
         </div>
       </div>
+      {/* Modals */}
+      <ProcessPayrollModal
+        isOpen={showProcessModal}
+        onClose={() => setShowProcessModal(false)}
+        onProcess={handleProcessPayroll}
+      />
+
+      {/* Payroll Detail Modal */}
+      <Modal
+        isOpen={showDetailModal}
+        onClose={() => setShowDetailModal(false)}
+        title={`Liquidación - ${selectedPayroll?.employeeName}`}
+        size="large"
+      >
+        {selectedPayroll && (
+          <div className="employee-payroll-detail">
+            <div className="employee-header">
+              <div className="employee-info-detail">
+                <h3>{selectedPayroll.employeeName}</h3>
+                <p>{selectedPayroll.position} - {selectedPayroll.department}</p>
+                <p>ID: {selectedPayroll.employeeId}</p>
+              </div>
+              <div className={`status-badge ${selectedPayroll.status.toLowerCase()}`}>
+                {selectedPayroll.status}
+              </div>
+            </div>
+
+            <div className="liquidation-breakdown">
+              <div className="breakdown-section">
+                <h4>Conceptos Remunerativos</h4>
+                <div className="concept-list">
+                  <div className="concept-item">
+                    <span className="concept-name">Sueldo Básico</span>
+                    <span className="concept-amount">${selectedPayroll.basicSalary.toLocaleString()}</span>
+                  </div>
+                  <div className="concept-item">
+                    <span className="concept-name">Presentismo</span>
+                    <span className="concept-amount">${(selectedPayroll.bonifications * 0.4).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</span>
+                  </div>
+                  <div className="concept-item">
+                    <span className="concept-name">Antigüedad</span>
+                    <span className="concept-amount">${(selectedPayroll.bonifications * 0.6).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</span>
+                  </div>
+                </div>
+                <div className="section-total positive">
+                  <span>Total Remunerativo:</span>
+                  <span>${(selectedPayroll.basicSalary + selectedPayroll.bonifications).toLocaleString()}</span>
+                </div>
+              </div>
+
+              <div className="breakdown-section">
+                <h4>Descuentos</h4>
+                <div className="concept-list">
+                  <div className="concept-item">
+                    <span className="concept-name">Jubilación (11%)</span>
+                    <span className="concept-amount">-${Math.round(selectedPayroll.basicSalary * 0.11).toLocaleString()}</span>
+                  </div>
+                  <div className="concept-item">
+                    <span className="concept-name">Obra Social (3%)</span>
+                    <span className="concept-amount">-${Math.round(selectedPayroll.basicSalary * 0.03).toLocaleString()}</span>
+                  </div>
+                  <div className="concept-item">
+                    <span className="concept-name">ANSSAL (3%)</span>
+                    <span className="concept-amount">-${Math.round(selectedPayroll.basicSalary * 0.03).toLocaleString()}</span>
+                  </div>
+                </div>
+                <div className="section-total negative">
+                  <span>Total Descuentos:</span>
+                  <span>-${selectedPayroll.deductions.toLocaleString()}</span>
+                </div>
+              </div>
+
+              <div className="final-total">
+                <span className="total-label">NETO A COBRAR:</span>
+                <span className="total-amount">${selectedPayroll.netSalary.toLocaleString()}</span>
+              </div>
+            </div>
+
+            <div className="liquidation-info">
+              <div className="info-grid">
+                <div className="info-item">
+                  <span className="info-label">Período:</span>
+                  <span className="info-value">{selectedPayroll.periodName}</span>
+                </div>
+                {selectedPayroll.processedDate && (
+                  <div className="info-item">
+                    <span className="info-label">Fecha de Proceso:</span>
+                    <span className="info-value">{new Date(selectedPayroll.processedDate).toLocaleDateString('es-ES')}</span>
+                  </div>
+                )}
+                {selectedPayroll.paymentDate && (
+                  <div className="info-item">
+                    <span className="info-label">Fecha de Pago:</span>
+                    <span className="info-value">{new Date(selectedPayroll.paymentDate).toLocaleDateString('es-ES')}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="detail-actions">
+              <button className="btn btn-primary" onClick={() => handlePrintPayroll(selectedPayroll)}>
+                <Printer className="h-4 w-4 mr-2" />
+                Imprimir Recibo
+              </button>
+              <button className="btn btn-secondary" onClick={() => handleDownloadPayroll(selectedPayroll)}>
+                <Download className="h-4 w-4 mr-2" />
+                Descargar PDF
+              </button>
+            </div>
+          </div>
+        )}
+        
+        <ModalFooter>
+          <button className="btn btn-secondary" onClick={() => setShowDetailModal(false)}>
+            Cerrar
+          </button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 }

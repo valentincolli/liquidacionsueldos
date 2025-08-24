@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Modal, ModalFooter } from './Modal/Modal';
 import { User, Building, DollarSign, Save, X } from 'lucide-react';
-import styles from './Modal/Modal.module.scss';
+import './Modal/Modal.scss';
 
 export function EmployeeEditModal({ isOpen, onClose, employee, onSave }) {
   const [formData, setFormData] = useState({
@@ -128,67 +128,67 @@ export function EmployeeEditModal({ isOpen, onClose, employee, onSave }) {
       onClose={onClose}
       title={`Editar Empleado - ${employee.name}`}
       size="large"
-      className={styles['employee-edit-modal']}
+      className={'employee-edit-modal'}
     >
-      <form onSubmit={handleSubmit} className={styles["employee-form"]}>
+      <form onSubmit={handleSubmit} className={"employee-form"}>
         {/* Información Personal */}
-        <div className={styles['form-section']}>
-          <h3 className={styles['section-title']}>
-            <User className={styles['title-icon']} />
+        <div className={'form-section'}>
+          <h3 className={'section-title'}>
+            <User className={'title-icon'} />
             Información Personal
           </h3>
-          <div className={styles['form-grid']}>
-            <div className={styles['form-group']}>
-              <label className={styles['form-label']}>Nombre Completo *</label>
+          <div className={'form-grid'}>
+            <div className={'form-group'}>
+              <label className={'form-label'}>Nombre Completo *</label>
               <input
                 type="text"
-                className={`${styles['form-input']} ${errors.name ? styles['error'] : ''}`}
+                className={`${'form-input'} ${errors.name ? 'error' : ''}`}
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
                 placeholder="Ingrese el nombre completo"
               />
-              {errors.name && <span className={styles['error-message']}>{errors.name}</span>}
+              {errors.name && <span className={'error-message'}>{errors.name}</span>}
             </div>
             
-            <div className={styles['form-group']}>
-              <label className={styles['form-label']}>Email *</label>
+            <div className={'form-group'}>
+              <label className={'form-label'}>Email *</label>
               <input
                 type="email"
-                className={`${styles['form-input']} ${errors.email ? styles['error'] : ''}`}
+                className={`${'form-input'} ${errors.email ? 'error' : ''}`}
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 placeholder="ejemplo@empresa.com"
               />
-              {errors.email && <span className={styles['error-message']}>{errors.email}</span>}
+              {errors.email && <span className={'error-message'}>{errors.email}</span>}
             </div>
 
-            <div className={styles['form-group']}>
-              <label className={styles['form-label']}>Teléfono</label>
+            <div className={'form-group'}>
+              <label className={'form-label'}>Teléfono</label>
               <input
                 type="tel"
-                className={styles['form-input']}
+                className={'form-input'}
                 value={formData.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
                 placeholder="+54 11 1234-5678"
               />
             </div>
 
-            <div className={styles['form-group']}>
-              <label className={styles['form-label']}>Dirección</label>
+            <div className={'form-group'}>
+              <label className={'form-label'}>Dirección</label>
               <input
                 type="text"
-                className={styles['form-input']}
+                className={'form-input'}
                 value={formData.address}
                 onChange={(e) => handleInputChange('address', e.target.value)}
                 placeholder="Dirección completa"
               />
             </div>
 
-            <div className={styles['form-group']}>
-              <label className={styles['form-label']}>CUIL</label>
+            <div className={'form-group'}>
+              <label className={'form-label'}>CUIL</label>
               <input
                 type="text"
-                className={styles['form-input']}
+                className={'form-input'}
                 value={formData.cuil}
                 onChange={(e) => handleInputChange('cuil', e.target.value)}
                 placeholder="20-12345678-9"
@@ -198,28 +198,28 @@ export function EmployeeEditModal({ isOpen, onClose, employee, onSave }) {
         </div>
 
         {/* Información Laboral */}
-        <div className={styles['form-section']}>
-          <h3 className={styles['section-title']}>
-            <Building className={styles['title-icon']} />
+        <div className={'form-section'}>
+          <h3 className={'section-title'}>
+            <Building className={'title-icon'} />
             Información Laboral
           </h3>
-          <div className={styles['form-grid']}>
-            <div className={styles['form-group']}>
-              <label className={styles['form-label']}>Cargo *</label>
+          <div className={'form-grid'}>
+            <div className={'form-group'}>
+              <label className={'form-label'}>Cargo *</label>
               <input
                 type="text"
-                className={`${styles['form-input']} ${errors.position ? styles['error'] : ''}`}
+                className={`${'form-input'} ${errors.position ? 'error' : ''}`}
                 value={formData.position}
                 onChange={(e) => handleInputChange('position', e.target.value)}
                 placeholder="Cargo del empleado"
               />
-              {errors.position && <span className={styles['error-message']}>{errors.position}</span>}
+              {errors.position && <span className={'error-message'}>{errors.position}</span>}
             </div>
 
-            <div className={styles['form-group']}>
-              <label className={styles['form-label']}>Departamento *</label>
+            <div className={'form-group'}>
+              <label className={'form-label'}>Departamento *</label>
               <select
-                className={`${styles['form-select']} ${errors.department ? styles['error'] : ''}`}
+                className={`${'form-select'} ${errors.department ? 'error' : ''}`}
                 value={formData.department}
                 onChange={(e) => handleInputChange('department', e.target.value)}
               >
@@ -231,13 +231,13 @@ export function EmployeeEditModal({ isOpen, onClose, employee, onSave }) {
                 <option value="RRHH">RRHH</option>
                 <option value="Operaciones">Operaciones</option>
               </select>
-              {errors.department && <span className={styles['error-message']}>{errors.department}</span>}
+              {errors.department && <span className={'error-message'}>{errors.department}</span>}
             </div>
 
-            <div className={styles['form-group']}>
-              <label className={styles['form-label']}>Estado</label>
+            <div className={'form-group'}>
+              <label className={'form-label'}>Estado</label>
               <select
-                className={styles['form-select']}
+                className={'form-select'}
                 value={formData.status}
                 onChange={(e) => handleInputChange('status', e.target.value)}
               >
@@ -247,10 +247,10 @@ export function EmployeeEditModal({ isOpen, onClose, employee, onSave }) {
               </select>
             </div>
 
-            <div className={styles['form-group']}>
-              <label className={styles['form-label']}>Tipo de Contrato</label>
+            <div className={'form-group'}>
+              <label className={'form-label'}>Tipo de Contrato</label>
               <select
-                className={styles['form-select']}
+                className={'form-select'}
                 value={formData.contractType}
                 onChange={(e) => handleInputChange('contractType', e.target.value)}
               >
@@ -261,11 +261,11 @@ export function EmployeeEditModal({ isOpen, onClose, employee, onSave }) {
               </select>
             </div>
 
-            <div className={styles['form-group']}>
-              <label className={styles['form-label']}>Jefe Directo</label>
+            <div className={'form-group'}>
+              <label className={'form-label'}>Jefe Directo</label>
               <input
                 type="text"
-                className={styles['form-input']}
+                className={'form-input'}
                 value={formData.manager}
                 onChange={(e) => handleInputChange('manager', e.target.value)}
                 placeholder="Nombre del jefe directo"
@@ -275,17 +275,17 @@ export function EmployeeEditModal({ isOpen, onClose, employee, onSave }) {
         </div>
 
         {/* Información Salarial */}
-        <div className={styles['form-section']}>
-          <h3 className={styles['section-title']}>
-            <DollarSign className={styles['title-icon']} />
+        <div className={'form-section'}>
+          <h3 className={'section-title'}>
+            <DollarSign className={'title-icon'} />
             Información Salarial
           </h3>
-          <div className={styles['form-grid']}>
-            <div className={styles['form-group']}>
-              <label className={styles['form-label']}>Salario Base *</label>
+          <div className={'form-grid'}>
+            <div className={'form-group'}>
+              <label className={'form-label'}>Salario Base *</label>
               <input
                 type="number"
-                className={`form-input ${errors.salary ? 'error' : ''}`}
+                className={`${'form-input'} ${errors.salary ? 'error' : ''}`}
                 value={formData.salary}
                 onChange={(e) => handleInputChange('salary', e.target.value)}
                 placeholder="0"
@@ -295,10 +295,10 @@ export function EmployeeEditModal({ isOpen, onClose, employee, onSave }) {
               {errors.salary && <span className="error-message">{errors.salary}</span>}
             </div>
 
-            <div className={styles['form-group']}>
-              <label className={styles['form-label']}>Convenio</label>
+            <div className={'form-group'}>
+              <label className={'form-label'}>Convenio</label>
               <select
-                className={styles['form-select']}
+                className={'form-select'}
                 value={formData.convenio}
                 onChange={(e) => handleInputChange('convenio', e.target.value)}
               >
@@ -309,10 +309,10 @@ export function EmployeeEditModal({ isOpen, onClose, employee, onSave }) {
               </select>
             </div>
 
-            <div className={styles['form-group']}>
-              <label className={styles['form-label']}>Categoría</label>
+            <div className={'form-group'}>
+              <label className={'form-label'}>Categoría</label>
               <select
-                className={styles['form-select']}
+                className={'form-select'}
                 value={formData.category}
                 onChange={(e) => handleInputChange('category', e.target.value)}
               >
@@ -325,10 +325,10 @@ export function EmployeeEditModal({ isOpen, onClose, employee, onSave }) {
               </select>
             </div>
 
-            <div className={styles['form-group']}>
-              <label className={styles['form-label']}>Banco</label>
+            <div className={'form-group'}>
+              <label className={'form-label'}>Banco</label>
               <select
-                className={styles['form-select']}
+                className={'form-select'}
                 value={formData.bank}
                 onChange={(e) => handleInputChange('bank', e.target.value)}
               >
@@ -341,11 +341,11 @@ export function EmployeeEditModal({ isOpen, onClose, employee, onSave }) {
               </select>
             </div>
 
-            <div className={styles['form-group']}>
-              <label className={styles['form-label']}>CBU</label>
+            <div className={'form-group'}>
+              <label className={'form-label'}>CBU</label>
               <input
                 type="text"
-                className={styles['form-input']}
+                className={'form-input'}
                 value={formData.cbu}
                 onChange={(e) => handleInputChange('cbu', e.target.value)}
                 placeholder="0110123456789012345678"
@@ -359,20 +359,20 @@ export function EmployeeEditModal({ isOpen, onClose, employee, onSave }) {
       <ModalFooter>
         <button 
           type="button" 
-          className={`${styles['btn']} ${styles['btn-cancel']}`}
+          className={`${'btn'} ${'btn-cancel'}`}
           onClick={onClose}
           disabled={isLoading}
         >
-          <X className={styles['close-icon']} />
+          <X className={'close-icon'} />
           Cancelar
         </button>
         <button 
           type="submit" 
-          className={`${styles['btn']} ${styles['btn-primary']}`}
+          className={`${'btn'} ${'btn-primary'}`}
           onClick={handleSubmit}
           disabled={isLoading}
         >
-          <Save className={styles['save-icon']} />
+          <Save className={'save-icon'} />
           {isLoading ? 'Guardando...' : 'Guardar Cambios'}
         </button>
       </ModalFooter>

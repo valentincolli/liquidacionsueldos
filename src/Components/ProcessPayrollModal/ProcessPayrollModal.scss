@@ -1,0 +1,997 @@
+@import '../../main.scss';
+
+.process-payroll-modal {
+  // Enhanced section headers with step indicators
+  .section-header-enhanced {
+    display: flex;
+    align-items: center;
+    gap: $spacing-4;
+    margin-bottom: $spacing-6;
+    padding: $spacing-4;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.05), rgba(34, 197, 94, 0.02));
+    border-radius: $border-radius-lg;
+    border-left: 4px solid $color-green-primary;
+
+    .step-indicator {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 3rem;
+      height: 3rem;
+      background: linear-gradient(135deg, $color-green-primary, $color-green-dark);
+      border-radius: 50%;
+      color: white;
+      font-weight: bold;
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+
+      .step-number {
+        font-size: $font-size-lg;
+        font-weight: 700;
+      }
+
+      .step-star {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        width: 1rem;
+        height: 1rem;
+        background: $color-yellow-primary;
+        border-radius: 50%;
+        padding: 2px;
+        color: white;
+      }
+    }
+
+    .header-content {
+      flex: 1;
+
+      .section-title {
+        font-size: $font-size-xl;
+        font-weight: 700;
+        color: $color-gray-900;
+        margin: 0 0 $spacing-1 0;
+        background: linear-gradient(135deg, $color-green-primary, $color-green-dark);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .section-subtitle {
+        font-size: $font-size-sm;
+        color: $color-gray-600;
+        margin: 0;
+      }
+    }
+  }
+  // Employee Search Section
+  .employee-search {
+    .search-section {
+      .search-container {
+        margin: $spacing-6 0;
+
+        .search-input-container {
+          position: relative;
+          max-width: 400px;
+          margin: 0 auto;
+
+          .search-icon {
+            position: absolute;
+            left: $spacing-3;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1.25rem;
+            height: 1.25rem;
+            color: $color-gray-400;
+          }
+
+          .search-input {
+            width: 100%;
+            padding: $spacing-3 $spacing-3 $spacing-3 2.5rem;
+            border: 2px solid $color-gray-200;
+            border-radius: $border-radius-lg;
+            font-size: $font-size-base;
+            background: $color-white;
+            transition: all 0.3s ease;
+
+            &:focus {
+              outline: none;
+              border-color: $color-green-primary;
+              box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+            }
+          }
+
+          .search-badge {
+            position: absolute;
+            right: $spacing-3;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            gap: $spacing-1;
+            background: linear-gradient(135deg, $color-green-primary, $color-green-dark);
+            color: white;
+            padding: $spacing-1 $spacing-2;
+            border-radius: $border-radius;
+            font-size: $font-size-xs;
+            font-weight: 600;
+
+            .badge-icon {
+              width: 0.75rem;
+              height: 0.75rem;
+            }
+          }
+        }
+      }
+
+      .employees-list {
+        max-height: 400px;
+        overflow-y: auto;
+        margin-top: $spacing-4;
+
+        .employee-card {
+          position: relative;
+          padding: $spacing-4;
+          border: 1px solid $color-gray-200;
+          border-radius: $border-radius-lg;
+          margin-bottom: $spacing-3;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          background: $color-white;
+          overflow: hidden;
+
+          &:hover {
+            border-color: $color-green-primary;
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.15);
+            transform: translateY(-2px);
+
+            .employee-card-accent {
+              width: 6px;
+            }
+
+            .salary-indicator {
+              transform: scale(1.2);
+            }
+          }
+
+          .employee-card-accent {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(135deg, $color-green-primary, $color-green-dark);
+            transition: all 0.3s ease;
+          }
+
+          .employee-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            .employee-main {
+              display: flex;
+              align-items: center;
+              gap: $spacing-3;
+
+              .employee-avatar {
+                position: relative;
+                width: 3rem;
+                height: 3rem;
+                background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05));
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 2px solid rgba(34, 197, 94, 0.2);
+
+                .employee-icon {
+                  width: 1.5rem;
+                  height: 1.5rem;
+                  color: $color-green-primary;
+                }
+
+                .status-dot {
+                  position: absolute;
+                  bottom: 2px;
+                  right: 2px;
+                  width: 8px;
+                  height: 8px;
+                  background: $color-green-primary;
+                  border-radius: 50%;
+                  border: 2px solid white;
+                  animation: pulse 2s infinite;
+                }
+              }
+
+              .employee-details {
+                .employee-name {
+                  font-size: $font-size-lg;
+                  font-weight: 600;
+                  color: $color-gray-900;
+                  margin: 0 0 $spacing-1 0;
+                }
+
+                .employee-badges {
+                  display: flex;
+                  gap: $spacing-1;
+                  margin: $spacing-1 0;
+                  flex-wrap: wrap;
+
+                  .badge {
+                    padding: 2px $spacing-1;
+                    border-radius: $border-radius;
+                    font-size: $font-size-xs;
+                    font-weight: 600;
+
+                    &.legajo-badge {
+                      background: rgba(34, 197, 94, 0.1);
+                      color: $color-green-primary;
+                      border: 1px solid rgba(34, 197, 94, 0.2);
+                    }
+
+                    &.category-badge {
+                      background: rgba(245, 158, 11, 0.1);
+                      color: $color-yellow-dark;
+                      border: 1px solid rgba(245, 158, 11, 0.2);
+                    }
+
+                    &.convenio-badge {
+                      background: rgba(59, 130, 246, 0.1);
+                      color: #2563eb;
+                      border: 1px solid rgba(59, 130, 246, 0.2);
+                    }
+                  }
+                }
+
+                .employee-meta {
+                  display: flex;
+                  align-items: center;
+                  gap: $spacing-1;
+                  font-size: $font-size-sm;
+                  color: $color-gray-500;
+                  margin: 0;
+
+                  .meta-icon {
+                    width: 0.875rem;
+                    height: 0.875rem;
+                    color: $color-green-primary;
+                  }
+                }
+              }
+            }
+
+            .employee-salary {
+              text-align: right;
+
+              .salary-label {
+                display: block;
+                font-size: $font-size-xs;
+                color: $color-gray-500;
+                margin-bottom: $spacing-1;
+              }
+
+              .salary-amount {
+                font-size: $font-size-lg;
+                font-weight: 700;
+                color: $color-green-primary;
+              }
+
+              .salary-indicator {
+                width: 4px;
+                height: 20px;
+                background: linear-gradient(135deg, $color-green-primary, $color-green-dark);
+                border-radius: 2px;
+                margin-top: $spacing-1;
+                transition: all 0.3s ease;
+              }
+            }
+          }
+        }
+
+        .no-results {
+          text-align: center;
+          padding: $spacing-8;
+          color: $color-gray-500;
+          background: rgba(107, 114, 128, 0.05);
+          border-radius: $border-radius-lg;
+          border: 1px dashed $color-gray-300;
+
+          .no-results-icon {
+            width: 3rem;
+            height: 3rem;
+            margin: 0 auto $spacing-3;
+            opacity: 0.5;
+          }
+
+          .no-results-hint {
+            display: block;
+            font-size: $font-size-xs;
+            color: $color-gray-400;
+            margin-top: $spacing-1;
+            font-style: italic;
+          }
+        }
+      }
+    }
+  }
+
+  // Payroll Form Section
+  .payroll-form {
+    .employee-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: $spacing-4;
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.05), rgba(245, 158, 11, 0.05));
+      border-radius: $border-radius-lg;
+      margin-bottom: $spacing-6;
+      border: 1px solid rgba(34, 197, 94, 0.2);
+      position: relative;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, $color-green-primary, $color-yellow-primary);
+        border-radius: $border-radius-lg $border-radius-lg 0 0;
+      }
+
+      .employee-summary {
+        display: flex;
+        align-items: center;
+        gap: $spacing-3;
+
+        .employee-avatar-small {
+          position: relative;
+          width: 2.5rem;
+          height: 2.5rem;
+          background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05));
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 2px solid rgba(34, 197, 94, 0.2);
+
+          .avatar-icon {
+            width: 1.25rem;
+            height: 1.25rem;
+            color: $color-green-primary;
+          }
+
+          .status-dot-small {
+            position: absolute;
+            bottom: 1px;
+            right: 1px;
+            width: 6px;
+            height: 6px;
+            background: $color-green-primary;
+            border-radius: 50%;
+            border: 1px solid white;
+          }
+        }
+
+        .summary-details {
+          h4 {
+            font-size: $font-size-lg;
+            font-weight: 600;
+            color: $color-gray-900;
+            margin: 0 0 $spacing-1 0;
+          }
+
+          .summary-badges {
+            display: flex;
+            gap: $spacing-1;
+
+            .badge {
+              padding: 2px $spacing-1;
+              border-radius: $border-radius;
+              font-size: $font-size-xs;
+              font-weight: 600;
+              background: rgba(34, 197, 94, 0.1);
+              color: $color-green-primary;
+              border: 1px solid rgba(34, 197, 94, 0.2);
+            }
+          }
+        }
+      }
+
+      .period-info {
+        display: flex;
+        align-items: center;
+        gap: $spacing-2;
+        padding: $spacing-2 $spacing-3;
+        background: rgba(34, 197, 94, 0.1);
+        border-radius: $border-radius-lg;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+
+        .period-icon {
+          width: 1.25rem;
+          height: 1.25rem;
+          color: $color-green-primary;
+        }
+
+        .period-details {
+          .period-text {
+            display: block;
+            color: $color-green-primary;
+            font-weight: 600;
+            font-size: $font-size-sm;
+          }
+
+          .period-status {
+            display: block;
+            color: $color-gray-500;
+            font-size: $font-size-xs;
+            font-weight: 400;
+          }
+        }
+      }
+    }
+
+    .concepts-section {
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: $spacing-4;
+
+        .header-left {
+          display: flex;
+          align-items: center;
+          gap: $spacing-3;
+
+          h3 {
+            font-size: $font-size-xl;
+            font-weight: 600;
+            color: $color-gray-900;
+            margin: 0;
+          }
+
+          .concepts-counter {
+            display: flex;
+            align-items: center;
+            gap: $spacing-1;
+            padding: $spacing-1 $spacing-2;
+            background: rgba(34, 197, 94, 0.1);
+            border-radius: $border-radius;
+            font-size: $font-size-xs;
+            font-weight: 600;
+            color: $color-green-primary;
+
+            .counter-icon {
+              width: 0.75rem;
+              height: 0.75rem;
+            }
+          }
+        }
+
+        .enhanced-btn {
+          position: relative;
+          overflow: hidden;
+
+          .btn-accent {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(135deg, $color-green-primary, $color-green-dark);
+            border-radius: $border-radius 0 0 $border-radius;
+          }
+        }
+      }
+
+      .concepts-table {
+        border: 1px solid $color-gray-200;
+        border-radius: $border-radius-lg;
+        overflow: hidden;
+        margin-bottom: $spacing-6;
+
+        .table-header {
+          display: grid;
+          grid-template-columns: 80px 2fr 100px 120px 120px 120px;
+          gap: $spacing-2;
+          padding: $spacing-3;
+          background: linear-gradient(135deg, $color-green-primary, $color-green-dark);
+          color: $color-white;
+          font-weight: 600;
+          font-size: $font-size-sm;
+
+          span {
+            text-align: center;
+          }
+        }
+
+        .concept-row {
+          display: grid;
+          grid-template-columns: 80px 2fr 100px 120px 120px 120px;
+          gap: $spacing-2;
+          padding: $spacing-3;
+          border-bottom: 1px solid $color-gray-100;
+          align-items: center;
+
+          &:last-child {
+            border-bottom: none;
+          }
+
+          &:hover {
+            background: rgba(34, 197, 94, 0.02);
+          }
+
+          .concept-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            .concept-input {
+              width: 100%;
+              padding: $spacing-1 $spacing-2;
+              border: 1px solid $color-gray-300;
+              border-radius: $border-radius;
+              font-size: $font-size-sm;
+              text-align: center;
+
+              &.small {
+                max-width: 60px;
+              }
+
+              &:focus {
+                outline: none;
+                border-color: $color-green-primary;
+                box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
+              }
+            }
+
+            .amount {
+              font-weight: 600;
+
+              &.positive {
+                color: $color-green-primary;
+              }
+
+              &.negative {
+                color: $color-danger;
+              }
+            }
+
+            .concept-actions {
+              display: flex;
+              align-items: center;
+              gap: $spacing-2;
+
+              .type-select {
+                padding: $spacing-1;
+                border: 1px solid $color-gray-300;
+                border-radius: $border-radius;
+                font-size: $font-size-xs;
+              }
+
+              .remove-btn {
+                background: $color-danger;
+                color: $color-white;
+                border: none;
+                border-radius: $border-radius;
+                padding: $spacing-1;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+
+                &:hover {
+                  background: darken($color-danger, 10%);
+                }
+              }
+            }
+          }
+        }
+      }
+
+      .totals-summary {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.05), rgba(245, 158, 11, 0.05));
+        padding: $spacing-4;
+        border-radius: $border-radius-lg;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+
+        .total-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: $spacing-2 0;
+          border-bottom: 1px solid rgba(34, 197, 94, 0.1);
+
+          &:last-child {
+            border-bottom: none;
+          }
+
+          &.final {
+            font-size: $font-size-lg;
+            font-weight: 700;
+            padding-top: $spacing-3;
+            border-top: 2px solid $color-green-primary;
+            margin-top: $spacing-2;
+          }
+
+          .amount {
+            font-weight: 600;
+
+            &.positive {
+              color: $color-green-primary;
+            }
+
+            &.negative {
+              color: $color-danger;
+            }
+
+            &.final {
+              color: $color-green-primary;
+              font-size: $font-size-xl;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Receipt Preview Section
+  .receipt-preview {
+    .receipt-container {
+      position: relative;
+      background: $color-white;
+      border: 2px solid $color-gray-300;
+      padding: $spacing-6;
+      max-width: 800px;
+      margin: 0 auto;
+      font-family: 'Courier New', monospace;
+      font-size: $font-size-sm;
+      line-height: 1.4;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+
+      .receipt-stamp {
+        position: absolute;
+        top: $spacing-4;
+        right: $spacing-4;
+        display: flex;
+        align-items: center;
+        gap: $spacing-1;
+        padding: $spacing-1 $spacing-2;
+        background: linear-gradient(135deg, $color-green-primary, $color-green-dark);
+        color: white;
+        border-radius: $border-radius;
+        font-size: $font-size-xs;
+        font-weight: 600;
+        transform: rotate(15deg);
+        box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+
+        .stamp-icon {
+          width: 0.75rem;
+          height: 0.75rem;
+        }
+      }
+
+      .receipt-header {
+        text-align: center;
+        border-bottom: 2px solid $color-gray-900;
+        padding-bottom: $spacing-4;
+        margin-bottom: $spacing-4;
+
+        .company-info {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: $spacing-3;
+
+          .company-logo {
+            .logo-circle {
+              width: 3rem;
+              height: 3rem;
+              background: linear-gradient(135deg, $color-green-primary, $color-green-dark);
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: white;
+              font-size: $font-size-xl;
+              font-weight: bold;
+              box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+            }
+          }
+
+          .company-details {
+            position: relative;
+            text-align: left;
+
+            h3 {
+              font-size: $font-size-lg;
+              font-weight: bold;
+              margin: 0 0 $spacing-1 0;
+              color: $color-gray-900;
+            }
+
+            p {
+              margin: 0;
+              color: $color-gray-700;
+              font-size: $font-size-sm;
+            }
+
+            .company-accent {
+              position: absolute;
+              bottom: -4px;
+              left: 0;
+              width: 60px;
+              height: 2px;
+              background: linear-gradient(90deg, $color-green-primary, $color-yellow-primary);
+              border-radius: 1px;
+            }
+          }
+        }
+      }
+
+      .receipt-employee-info {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: $spacing-4;
+        margin-bottom: $spacing-4;
+        padding-bottom: $spacing-4;
+        border-bottom: 1px solid $color-gray-300;
+
+        .employee-data {
+          .data-row {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            margin-bottom: $spacing-2;
+
+            .label {
+              font-weight: bold;
+              color: $color-gray-900;
+            }
+
+            .value {
+              color: $color-gray-700;
+            }
+          }
+        }
+
+        .employee-meta {
+          .meta-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: $spacing-1;
+
+            .label {
+              font-weight: bold;
+              color: $color-gray-900;
+            }
+
+            .value {
+              color: $color-gray-700;
+            }
+          }
+        }
+      }
+
+      .receipt-concepts {
+        margin-bottom: $spacing-4;
+
+        .concepts-header {
+          display: grid;
+          grid-template-columns: 100px 200px 80px 100px 100px;
+          gap: $spacing-2;
+          padding: $spacing-2;
+          background: $color-gray-100;
+          font-weight: bold;
+          border-bottom: 2px solid $color-gray-900;
+
+          span {
+            text-align: center;
+          }
+        }
+
+        .concept-line {
+          display: grid;
+          grid-template-columns: 100px 200px 80px 100px 100px;
+          gap: $spacing-2;
+          padding: $spacing-1;
+          border-bottom: 1px solid $color-gray-200;
+
+          span {
+            text-align: center;
+
+            &.concept-name {
+              text-align: left;
+            }
+          }
+        }
+      }
+
+      .receipt-totals {
+        border-top: 2px solid $color-gray-900;
+        padding-top: $spacing-3;
+        margin-bottom: $spacing-4;
+
+        .total-breakdown {
+          margin-bottom: $spacing-2;
+
+          .breakdown-line {
+            display: flex;
+            justify-content: space-between;
+            padding: $spacing-1 $spacing-2;
+            font-size: $font-size-sm;
+
+            .amount-positive {
+              color: $color-green-primary;
+              font-weight: 600;
+            }
+
+            .amount-negative {
+              color: $color-danger;
+              font-weight: 600;
+            }
+          }
+        }
+
+        .total-line {
+          position: relative;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-weight: bold;
+          font-size: $font-size-base;
+          padding: $spacing-2;
+          background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05));
+          border: 1px solid rgba(34, 197, 94, 0.2);
+          border-radius: $border-radius;
+
+          .final-amount {
+            color: $color-green-primary;
+            font-size: $font-size-lg;
+            font-weight: 700;
+          }
+
+          .amount-indicator {
+            position: absolute;
+            right: -2px;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(135deg, $color-green-primary, $color-green-dark);
+            border-radius: 0 $border-radius $border-radius 0;
+          }
+        }
+      }
+
+      .receipt-footer {
+        border-top: 1px solid $color-gray-300;
+        padding-top: $spacing-3;
+
+        .payment-info {
+          margin-bottom: $spacing-2;
+          font-weight: bold;
+        }
+
+        .amount-words {
+          font-style: italic;
+          color: $color-gray-600;
+        }
+      }
+    }
+  }
+
+  // Responsive Design
+  @media (max-width: 768px) {
+    .payroll-form {
+      .employee-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: $spacing-3;
+      }
+
+      .concepts-section {
+        .concepts-table {
+          .table-header,
+          .concept-row {
+            grid-template-columns: 60px 1fr 80px 90px 90px 100px;
+            font-size: $font-size-xs;
+          }
+        }
+      }
+    }
+
+    .receipt-preview {
+      .receipt-container {
+        padding: $spacing-4;
+        font-size: $font-size-xs;
+
+        .receipt-employee-info {
+          grid-template-columns: 1fr;
+        }
+
+        .receipt-concepts {
+          .concepts-header,
+          .concept-line {
+            grid-template-columns: 80px 150px 60px 80px 80px;
+            font-size: $font-size-xs;
+          }
+        }
+      }
+    }
+  }
+
+  // Print Styles
+  @media print {
+    .receipt-preview {
+      .receipt-container {
+        border: none;
+        box-shadow: none;
+        max-width: none;
+        margin: 0;
+        padding: 20px;
+      }
+    }
+  }
+}
+
+// Animations
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// Button styles for small buttons
+.btn-sm {
+  padding: $spacing-1 $spacing-3;
+  font-size: $font-size-sm;
+}
+
+.btn-success {
+  background-color: $color-success;
+  color: $color-white;
+
+  &:hover {
+    background-color: darken($color-success, 10%);
+  }
+}
+
+// Enhanced visual effects
+.employee-card {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.receipt-container {
+  animation: slideInRight 0.4s ease-out;
+}

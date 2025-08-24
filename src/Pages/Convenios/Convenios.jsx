@@ -3,6 +3,7 @@ import { FileText, Plus, Settings, Download, TrendingUp, Users, Calculator, Uplo
 import { ConvenioCard } from '../../Components/ConvenioCard/ConvenioCard.jsx';
 import { Modal, ModalFooter } from '../../Components/Modal/Modal.jsx';
 import './Convenios.scss';
+import { useNavigate } from 'react-router-dom';
 
 // Mock data for convenios
 const conveniosData = [
@@ -61,6 +62,7 @@ const conveniosData = [
 ];
 
 export default function Convenios() {
+  const navigate = useNavigate();
   const [convenios, setConvenios] = useState(conveniosData);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -68,8 +70,7 @@ export default function Convenios() {
   const [selectedConvenio, setSelectedConvenio] = useState(null);
 
   const handleViewConvenio = (convenio) => {
-    setSelectedConvenio(convenio);
-    setShowViewModal(true);
+    navigate(`/convenios/${convenio.id}`);
   };
 
   const handleEditConvenio = (convenio) => {
@@ -161,6 +162,7 @@ export default function Convenios() {
           </div>
         </div>
       </div>
+
       {/* Convenios Cards */}
       <div className="card">
         <div className="card-header">
