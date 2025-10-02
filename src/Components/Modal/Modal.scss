@@ -1,4 +1,6 @@
-/*.modal-overlay {
+@import '../../styles/main.scss';
+
+.modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -315,4 +317,146 @@
       }
     }
   }
-}*/
+}
+
+/* ====== Áreas (chips + adder) ====== */
+.employee-form {
+  .form-section {
+    .form-grid {
+      .form-group {
+        /* Contenedor de chips */
+        .area-chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: $spacing-2;
+          margin-bottom: $spacing-2;
+        }
+
+        /* Chip individual */
+        .area-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: $spacing-2;
+          padding: $spacing-1 $spacing-2;
+          border: 1px solid $color-gray-300;
+          border-radius: 999px;
+          background: $color-gray-50;
+          font-size: $font-size-sm;
+          color: $color-gray-900;
+          transition: box-shadow .15s ease, transform .15s ease;
+
+          &:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+          }
+
+          /* Botón "-" del chip */
+          .chip-remove {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: $border-radius-sm;
+            border: 1px solid $color-gray-300;
+            background: $color-white;
+            cursor: pointer;
+            line-height: 1;
+            font-weight: 700;
+            color: $color-gray-700;
+            transition: all .15s ease;
+
+            &:hover {
+              background: $color-gray-100;
+              color: $color-gray-900;
+              transform: scale(1.05);
+            }
+
+            &:focus {
+              outline: none;
+              box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15); // green glow
+              border-color: $color-green-primary;
+            }
+          }
+        }
+
+        /* Fila del selector + botón "+" */
+        .area-actions {
+          display: flex;
+          align-items: center;
+          gap: $spacing-2;
+
+          .form-select {
+            flex: 1 1 auto;
+            min-width: 220px;
+          }
+
+          /* Botón "+" compacto, heredando tu sistema */
+          .btn-plus {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: $border-radius;
+            border: 1px solid $color-gray-300;
+            background: $color-white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .15s ease;
+            color: $color-gray-900;
+
+            &:hover {
+              transform: translateY(-1px);
+              box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+              border-color: $color-green-primary;
+            }
+
+            &:disabled {
+              opacity: .6;
+              cursor: not-allowed;
+            }
+
+            &:focus {
+              outline: none;
+              box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
+              border-color: $color-green-primary;
+            }
+          }
+        }
+
+        /* Mensajito auxiliar */
+        .hint {
+          display: inline-block;
+          margin-top: $spacing-2;
+          color: $color-gray-600;
+          font-size: $font-size-xs;
+        }
+
+        /* Error ya heredado, pero reforzamos para este grupo */
+        .error-message {
+          display: block;
+          margin-top: $spacing-2;
+          color: #dc2626; // rojo consistente con tus estados
+          font-size: $font-size-xs;
+          font-weight: 500;
+        }
+      }
+    }
+  }
+}
+
+/* Responsive pequeño */
+@media (max-width: 480px) {
+  .employee-form .form-section .form-grid .form-group {
+    .area-actions {
+      flex-direction: column;
+      align-items: stretch;
+
+      .btn-plus {
+        width: 100%;
+        height: 40px;
+      }
+    }
+  }
+}

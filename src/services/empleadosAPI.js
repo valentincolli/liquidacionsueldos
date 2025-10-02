@@ -18,6 +18,9 @@ export const getEmpleadoByLegajo = (legajo) =>
 export const getCategoriaById = (id) =>
     axiosClient.get(`/categorias/${id}`).then((r)=>r.data);
 
+export const getCategorias = () =>
+    axiosClient.get(`/categorias`).then((r)=>r.data);
+
 export const getPorcentajeArea = (idArea, idCat) =>
     axiosClient.get(`bonificaciones-variables/area/${idArea}/categoria/${idCat}`).then((r)=>r.data);
 

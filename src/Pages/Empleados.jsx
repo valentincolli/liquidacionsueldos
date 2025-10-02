@@ -1,7 +1,10 @@
 import React from 'react';
-import { Users, Search, Plus, Edit, Trash2, Mail, Phone, Calendar, Building, Eye, MoreHorizontal, Filter } from 'lucide-react';
+import { Search, Plus, Edit, Eye, Filter, DollarSign, UserX, UserCheck } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { Dropdown, DropdownItem } from '../Components/Dropdown/Dropdown';
+import { EmployeeViewModal } from '../Components/EmployeeViewModal/EmployeeViewModal.jsx';
+import { NewEmployeeModal } from '../Components/NewEmployeeModal/NewEmployeeModal.jsx';
+import { EmployeeEditModal } from '../Components/EmployeeEditModal/EmployeeEditModal.jsx';
+import { Tooltip } from '../Components/ToolTip/ToolTip';
 import * as api from '../services/empleadosAPI'
 import '../styles/components/_employees.scss';
 
@@ -14,6 +17,12 @@ export default function Empleados() {
   const [current, setCurrent] = useState(null);
   const [search, setSearch] = useState("");
   const [filtered, setFiltered] = useState([]);
+  const [employeeList, setEmployeeList] = useState(employees);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showConceptsModal, setShowConceptsModal] = useState(false);
+  const [showNewEmployeeModal, setShowNewEmployeeModal] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
   
   const loadEmployees = async () => {
     try {
@@ -21,6 +30,7 @@ export default function Empleados() {
         const data = await api.getEmployees();
         setEmployees(data);
         setError("");
+        console.log("Employees loaded:", data);
     } catch (err) {
         setError(err.message);
     } finally {
@@ -68,24 +78,53 @@ export default function Empleados() {
   };
 
   const handleViewEmployee = (employee) => {
-    //setSelectedEmployee(employee);
-    setModalOpen(true);
+    setSelectedEmployee(employee);
+    setShowViewModal(true);
   };
 
   const handleEditEmployee = (employee) => {
+    setSelectedEmployee(employee);
+    setShowEditModal(true);
+  };
+
+  const handleLiquidarSueldo = (employee) => {
     //setSelectedEmployee(employee);
     setModalOpen(true);
   };
 
   const getStatusClass = (status) => {
     switch (status) {
-      case 'Activo':
+      case 'ACTIVO':
         return 'active';
       case 'DADO_DE_BAJA':
         return 'inactive';
       default:
         return 'active';
     }
+  };
+
+  const handleDeactivateEmployee = (employee) => {
+    if (window.confirm(`¿Está seguro de que desea dar de baja a ${`${employee.nombre} ${employee.apellido}`}?`)) {
+      setEmployeeList(prev =>
+        prev.map(emp =>
+          emp.id === employee.id
+            ? { ...emp, status: 'Inactivo' }
+            : emp
+        )
+      );
+      if (window.showNotification) {
+        window.showNotification(`Empleado ${employee.name} dado de baja`, 'info');
+      }
+      console.log('Empleado dado de baja:', employee.name);
+    }
+  };
+
+  const closeModals = () => {
+    setShowViewModal(false);
+    setShowEditModal(false);
+    setShowConceptsModal(false);
+    setShowNewEmployeeModal(false);
+    setSelectedEmployee(null);
   };
 
   return (
@@ -100,7 +139,7 @@ export default function Empleados() {
             Administra la información y datos de todos los empleados
           </p>
         </div>
-        <button className="add-employee-btn">
+        <button className="add-employee-btn" onClick={() => setShowNewEmployeeModal(true)}>
           <Plus className="btn-icon" />
           Nuevo Empleado
         </button>
@@ -189,33 +228,80 @@ export default function Empleados() {
                   </div>
                 </div>
                 <div className="employee-actions">
-                  <Dropdown
-                    trigger={
-                      <button className="actions-trigger">
-                        <MoreHorizontal className="actions-icon" />
-                      </button>
-                    }
-                    align="right"
-                  >
-                    <DropdownItem
-                      icon={Eye}
+                  <Tooltip content="Ver detalles del empleado" position="top">
+                    <button
+                      className="action-icon-button view-action"
                       onClick={() => handleViewEmployee(employee)}
                     >
-                      Ver
-                    </DropdownItem>
-                    <DropdownItem
-                      icon={Edit}
+                      <Eye className="action-icon" />
+                    </button>
+                  </Tooltip>
+
+                  <Tooltip content="Editar empleado" position="top">
+                    <button
+                      className="action-icon-button edit-action"
                       onClick={() => handleEditEmployee(employee)}
+                      disabled={employee.estado !== 'ACTIVO'}
                     >
-                      Editar
-                    </DropdownItem>
-                  </Dropdown>
+                      <Edit className="action-icon" />
+                    </button>
+                  </Tooltip>
+
+                  <Tooltip content="Liquidar sueldo" position="top">
+                    <button
+                      className="action-icon-button liquidate-action"
+                      onClick={() => handleLiquidarSueldo(employee)}
+                      disabled={employee.estado !== 'ACTIVO'}
+                    >
+                      <DollarSign className="action-icon" />
+                    </button>
+                  </Tooltip>
+
+                  {employee.estado === 'ACTIVO' ? (
+                    <Tooltip content="Dar de baja empleado" position="top">
+                      <button
+                        className="action-icon-button deactivate-action"
+                        onClick={() => handleDeactivateEmployee(employee)}
+                      >
+                        <UserX className="action-icon" />
+                      </button>
+                    </Tooltip>
+                  ) : (
+                    <Tooltip content="Dar de alta empleado" position="top">
+                      <button
+                        className="action-icon-button activate-action"
+                        onClick={() => alert('Funcionalidad de alta no implementada')}
+                      >
+                        <UserCheck className="action-icon" />
+                      </button>
+                    </Tooltip>
+                  )}
                 </div>
               </div>
             ))}
           </div>
         </div>
       </div>
+      {/* Modales */}
+      <NewEmployeeModal
+        isOpen={showNewEmployeeModal}
+        onClose={closeModals}
+        onSave={handleSaveEmployee}
+      />
+      <EmployeeEditModal
+        isOpen={showEditModal}
+        onClose={closeModals}
+        employee={selectedEmployee}
+        onSave={handleSaveEmployee}
+      />
+      <EmployeeViewModal
+        isOpen={showViewModal}
+        onClose={closeModals}
+        employee={selectedEmployee}
+        //onConceptos={handleConceptos}
+        //onLiquidarSueldo={handleLiquidarSueldo}
+        //onHistorialLiquidaciones={handleHistorialLiquidaciones}
+      />
     </div>
   );
 }
