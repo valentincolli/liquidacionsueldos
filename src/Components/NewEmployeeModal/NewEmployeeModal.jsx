@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, ModalFooter } from '../Modal/Modal';
-import { User, Building, X, UserPlus } from 'lucide-react';
+import { User, Building, X, UserPlus, ListChecks } from 'lucide-react';
 import * as api from "../../services/empleadosAPI";
 
 export function NewEmployeeModal({ isOpen, onClose, onSave }) {
@@ -35,6 +35,9 @@ export function NewEmployeeModal({ isOpen, onClose, onSave }) {
   const [categoriaNoEncontrada, setCategoriaNoEncontrada] = useState(false);
   const selectedSet = new Set((formData.areas || []).map(Number));
   const availableAreas = areas.filter(a => !selectedSet.has(a.id));
+  const [conceptos, setConceptos] = useState([]);
+  const [conceptosSeleccionados, setConceptosSeleccionados] = useState({});
+
 
   // Carga las áreas al montar el componente
   useEffect(() => {
@@ -66,6 +69,15 @@ export function NewEmployeeModal({ isOpen, onClose, onSave }) {
       };
       loadCategorias();
     }, []);
+
+  // Maneja el toggle de selección de conceptos
+  useEffect(() => {
+  setConceptos([
+    { id: 1, nombre: 'Horas Extras', unidad: 'horas' },
+    { id: 2, nombre: 'Comisión', unidad: '%' },
+    { id: 3, nombre: 'Bono Producción', unidad: 'unidades' }
+  ]);
+  }, []);
 
   // Actualiza el salario base cuando cambia la categoría seleccionada
   useEffect(() => {
@@ -262,6 +274,27 @@ export function NewEmployeeModal({ isOpen, onClose, onSave }) {
     });
     setErrors({});
     onClose();
+  };
+
+  // Maneja el toggle de selección de conceptos adicionales
+  const handleConceptToggle = (conceptId) => {
+    setConceptosSeleccionados((prev) => {
+      const next = { ...prev };
+      if (next[conceptId]) {
+        delete next[conceptId];
+      } else {
+        next[conceptId] = { units: '' };
+      }
+      return next;
+    });
+  };
+  
+  // Maneja el cambio en las unidades de un concepto seleccionado
+  const handleUnitsChange = (conceptId, units) => {
+    setConceptosSeleccionados((prev) => ({
+      ...prev,
+      [conceptId]: { ...prev[conceptId], units }
+    }));
   };
 
   return (
@@ -482,6 +515,39 @@ export function NewEmployeeModal({ isOpen, onClose, onSave }) {
                 <span className="error-message">{errors.areas}</span>
               )}
             </div>
+          </div>
+        </div>
+        {/* Conceptos Adicionales */}
+        <div className="form-section conceptos-section">
+          <h3 className="section-title">
+            <ListChecks className="title-icon" />
+            Conceptos Adicionales
+          </h3>
+          <div className="conceptos-list">
+            {conceptos.map((concepto) => (
+              <div key={concepto.id} className="concepto-item">
+                <div className="checkbox-container">
+                  <input
+                    type="checkbox"
+                    id={`concepto-${concepto.id}`}
+                    checked={!!conceptosSeleccionados[concepto.id]}
+                    onChange={() => handleConceptToggle(concepto.id)}
+                  />
+                  <label htmlFor={`concepto-${concepto.id}`}>{concepto.nombre}</label>
+                </div>
+                <div className="units-input">
+                  <label htmlFor={`units-${concepto.id}`}>Unidades:</label>
+                  <input
+                    type="number"
+                    id={`units-${concepto.id}`}
+                    value={(conceptosSeleccionados[concepto.id]?.units ?? '')}
+                    onChange={(e) => handleUnitsChange(concepto.id, e.target.value)}
+                    min="0"
+                    disabled={!conceptosSeleccionados[concepto.id]}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </form>

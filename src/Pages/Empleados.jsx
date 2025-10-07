@@ -24,13 +24,22 @@ export default function Empleados() {
   const [showNewEmployeeModal, setShowNewEmployeeModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   
+  const normalizeEmployees = (rows) =>
+  rows.map(e => ({
+    ...e,
+    gremioId: e.gremio?.idGremio ?? null,
+    gremioNombre: e.gremio?.nombre ?? (typeof e.gremio === 'string' ? e.gremio : ""),
+    categoriaId: e.categoria?.id ?? e.categoria?.idCategoria ?? null,
+    categoriaNombre: e.categoria?.nombre ?? (typeof e.categoria === 'string' ? e.categoria : ""),
+  }));
+
   const loadEmployees = async () => {
     try {
         setLoading(true);
         const data = await api.getEmployees();
-        setEmployees(data);
+        const norm = normalizeEmployees(data);
+        setEmployees(norm);
         setError("");
-        console.log("Employees loaded:", data);
     } catch (err) {
         setError(err.message);
     } finally {
@@ -55,10 +64,11 @@ export default function Empleados() {
   useEffect(() => {
       const lower = search.toLowerCase();
       setFiltered(
-        employees.filter(
-          (e) =>
-            e.legajo.toString().includes(search) ||
-            `${e.nombre} ${e.apellido}`.toLowerCase().includes(lower)
+          employees.filter((e) =>
+          e.legajo?.toString().includes(search) ||
+          `${e.nombre} ${e.apellido}`.toLowerCase().includes(lower) ||
+          e.gremioNombre?.toLowerCase().includes(lower) ||
+          e.categoriaNombre?.toLowerCase().includes(lower)
         )
       );
   }, [search, employees]);
@@ -107,17 +117,15 @@ export default function Empleados() {
     if (window.confirm(`¿Está seguro de que desea dar de baja a ${`${employee.nombre} ${employee.apellido}`}?`)) {
       setEmployeeList(prev =>
         prev.map(emp =>
-          emp.id === employee.id
+          emp.legajo === employee.legajo
             ? { ...emp, status: 'Inactivo' }
             : emp
         )
       );
-      if (window.showNotification) {
-        window.showNotification(`Empleado ${employee.name} dado de baja`, 'info');
+        window.showNotification?.(`Empleado ${employee.nombre} ${employee.apellido} dado de baja`, 'info');
       }
       console.log('Empleado dado de baja:', employee.name);
     }
-  };
 
   const closeModals = () => {
     setShowViewModal(false);
@@ -125,6 +133,17 @@ export default function Empleados() {
     setShowConceptsModal(false);
     setShowNewEmployeeModal(false);
     setSelectedEmployee(null);
+  };
+
+  const formatDate = (d) => {
+    try {
+      if (!d) return "-";
+      const parsed = new Date(d);
+      if (Number.isNaN(parsed.getTime())) return String(d);
+      return parsed.toLocaleDateString('es-AR');
+    } catch {
+      return String(d);
+    }
   };
 
   return (
@@ -203,7 +222,7 @@ export default function Empleados() {
           <div className="employee-list">
             {filtered.map((employee) => (
               <div
-                key={employee.id}
+                key={employee.legajo ?? `${employee.nombre}-${employee.apellido}`}
                 className="employee-item"
               >
                 <div className="employee-grid">
@@ -212,8 +231,10 @@ export default function Empleados() {
                     <p className="employee-email">Legajo: {employee.legajo}</p>
                   </div>
                   <div className="employee-position">
-                    <p className="position-title">{employee.gremio === "LUZ_Y_FUERZA" ? "Luz y Fuerza" : employee.gremio}</p>
-                    <p className="department">{employee.categoria}</p>
+                    <p className="position-title">
+                      {employee.gremioNombre === "LUZ_Y_FUERZA" ? "Luz y Fuerza" : (employee.gremioNombre || "-")}
+                    </p>
+                    <p className="department">{employee.categoriaNombre || "-"}</p>
                   </div>
                   <div className="employee-salary">
                     <p className="salary-amount">

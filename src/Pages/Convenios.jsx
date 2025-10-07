@@ -6,72 +6,41 @@ import { Modal, ModalFooter } from '../Components/Modal/Modal.jsx';
 import '../styles/components/_convenios.scss';
 import * as api from '../services/empleadosAPI';
 
-// Mock data for convenios
-const conveniosData = [
-  {
-    id: 1,
-    name: 'Luz y Fuerza',
-    sector: 'Energía Eléctrica',
-    status: 'Activo',
-    employeeCount: 45,
-    basicSalary: 285000,
-    lastUpdate: '2024-01-15',
-    startDate: '2024-01-01',
-    endDate: '2024-12-31',
-    activityBranch: 'Servicios Eléctricos',
-    scope: 'Nacional',
-    salaryScales: [
-      { category: 'Especialista A', amount: 350000 },
-      { category: 'Especialista B', amount: 320000 },
-      { category: 'Técnico A', amount: 285000 },
-      { category: 'Técnico B', amount: 250000 },
-      { category: 'Operario A', amount: 220000 },
-      { category: 'Operario B', amount: 195000 }
-    ],
-    documents: [
-      { name: 'Convenio Colectivo 2024.pdf', uploadDate: '2024-01-15' },
-      { name: 'Escalas Salariales.pdf', uploadDate: '2024-01-20' },
-      { name: 'Anexo Condiciones Laborales.pdf', uploadDate: '2024-02-01' }
-    ]
-  },
-  {
-    id: 2,
-    name: 'UOCRA',
-    sector: 'Construcción',
-    status: 'Activo',
-    employeeCount: 79,
-    basicSalary: 260000,
-    lastUpdate: '2024-02-01',
-    startDate: '2024-01-01',
-    endDate: '2024-12-31',
-    activityBranch: 'Industria de la Construcción',
-    scope: 'Nacional',
-    salaryScales: [
-      { category: 'Maestro Mayor', amount: 380000 },
-      { category: 'Capataz General', amount: 340000 },
-      { category: 'Oficial Especializado', amount: 300000 },
-      { category: 'Oficial', amount: 260000 },
-      { category: 'Medio Oficial', amount: 230000 },
-      { category: 'Ayudante', amount: 200000 }
-    ],
-    documents: [
-      { name: 'CCT UOCRA 2024.pdf', uploadDate: '2024-02-01' },
-      { name: 'Escalas Construcción.pdf', uploadDate: '2024-02-05' },
-      { name: 'Seguridad y Higiene.pdf', uploadDate: '2024-02-10' }
-    ]
-  }
-];
-
 export default function Convenios() {
   const navigate = useNavigate();
-  const [convenios, setConvenios] = useState(conveniosData);
+  const [convenios, setConvenios] = useState([]);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedConvenio, setSelectedConvenio] = useState(null);
 
-  const handleViewConvenio = (convenio) => {
-    navigate(`/convenios/${convenio.id}`);
+  const normalizeConvenios = (rows) =>
+    rows.map((c,i) => ({
+      id: i + 1,
+      name: c.nombreConvenio,
+      sector: c.nombreConvenio,
+      description: c.descripcion,
+      employeeCount: c.empleadosActivos,
+      categories: c.cantidadCategorias,
+      controller: c.controller,
+      status: 'Activo',
+    }));
+  
+  useEffect(() => {
+  const loadConvenios = async () => {
+    try {
+      const response = await api.getConvenios();
+      setConvenios(normalizeConvenios(response));
+    } catch (err) {
+      console.error("Error cargando convenios:", err);
+    }
+  };
+
+  loadConvenios();
+}, []);
+
+  const handleViewConvenio = (controller) => {
+    navigate(`/convenios/${controller}`);
   };
 
   const handleEditConvenio = (convenio) => {
@@ -115,6 +84,9 @@ export default function Convenios() {
     setSelectedConvenio(null);
   };
 
+  const totalEmpleados = convenios.reduce((total, conv) => total + conv.employeeCount || 0, 0);
+  const totalCategorias = convenios.reduce((total, conv) => total + conv.categories || 0, 0);
+
   return (
     <div className="placeholder-page">
       {/* Header */}
@@ -144,7 +116,7 @@ export default function Convenios() {
           <div className="stat-content">
             <div className="stat-info">
               <div className="stat-value primary">
-                {convenios.reduce((total, conv) => total + conv.employeeCount, 0)}
+                {totalEmpleados}
               </div>
               <p className="stat-label">Total Empleados</p>
             </div>
@@ -155,9 +127,9 @@ export default function Convenios() {
           <div className="stat-content">
             <div className="stat-info">
               <div className="stat-value warning">
-                ${Math.round(convenios.reduce((total, conv) => total + conv.basicSalary, 0) / convenios.length).toLocaleString()}
+                {totalCategorias}
               </div>
-              <p className="stat-label">Salario Promedio</p>
+              <p className="stat-label">Total Categorías</p>
             </div>
             <Calculator className="stat-icon warning" />
           </div>
@@ -179,7 +151,7 @@ export default function Convenios() {
           <div className="convenios-grid">
             {convenios.map((convenio) => (
               <ConvenioCard
-                key={convenio.id}
+                key={convenio.controller}
                 convenio={convenio}
                 onView={handleViewConvenio}
                 onEdit={handleEditConvenio}
@@ -205,39 +177,24 @@ export default function Convenios() {
                 <div className="info-grid">
                   <div className="info-item">
                     <span className="info-label">Sector:</span>
-                    <span className="info-value">{selectedConvenio.sector}</span>
+                    <span className="info-value">{selectedConvenio.name}</span>
                   </div>
                   <div className="info-item">
-                    <span className="info-label">Estado:</span>
-                    <span className={`info-value status ${selectedConvenio.status.toLowerCase()}`}>
-                      {selectedConvenio.status}
-                    </span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Empleados afectados:</span>
-                    <span className="info-value">{selectedConvenio.employeeCount}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Vigencia:</span>
+                    <span className="info-label">Empleados activos:</span>
                     <span className="info-value">
-                      {new Date(selectedConvenio.startDate).toLocaleDateString('es-ES')} - 
-                      {new Date(selectedConvenio.endDate).toLocaleDateString('es-ES')}
+                      {selectedConvenio.employeeCount}
                     </span>
                   </div>
-                </div>
-              </div>
-
-              <div className="view-section">
-                <h3>Escalas Salariales</h3>
-                <div className="scales-list">
-                  {selectedConvenio.salaryScales.map((scale, index) => (
-                    <div key={index} className="scale-item">
-                      <span className="scale-category">{scale.category}</span>
-                      <span className="scale-amount">
-                        ${scale.amount.toLocaleString()}
-                      </span>
-                    </div>
-                  ))}
+                  <div className="info-item">
+                    <span className="info-label">Categorías:</span>
+                    <span className="info-value">{selectedConvenio.categoriesCount}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Descripción:</span>
+                    <span className="info-value">
+                      {selectedConvenio.description || 'N/A'}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -261,12 +218,11 @@ export default function Convenios() {
       <Modal
         isOpen={showEditModal}
         onClose={closeModals}
-        title={`Editar Convenio - ${selectedConvenio?.name}`}
+        title={`Editar Convenio - ${selectedConvenio?.name ?? ""}`}
         size="large"
       >
         <div className="edit-form-placeholder">
           <p>Formulario de edición de convenio en desarrollo...</p>
-          <p>Aquí podrás modificar escalas salariales, vigencia, y otros parámetros del convenio.</p>
         </div>
         
         <ModalFooter>
@@ -283,7 +239,7 @@ export default function Convenios() {
       <Modal
         isOpen={showUploadModal}
         onClose={closeModals}
-        title={`Subir Documento - ${selectedConvenio?.name}`}
+        title={`Subir Documento - ${selectedConvenio?.name ?? ""}`}
         size="medium"
       >
         <div className="upload-content">

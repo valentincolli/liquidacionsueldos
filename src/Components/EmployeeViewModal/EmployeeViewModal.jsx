@@ -69,7 +69,7 @@ export function EmployeeViewModal({ isOpen, onClose, employee, onLiquidarSueldo,
             </div>
             <div className={'detail-item'}>
               <div className={'detail-label'}>Convenio</div>
-              <div className={'detail-value'}>{employee.gremio === "LUZ_Y_FUERZA" ? "Luz y Fuerza" : employee.gremio}</div>
+              <div className={'detail-value'}>{employee.gremioNombre === "LUZ_Y_FUERZA" ? "Luz y Fuerza" : employee.gremioNombre}</div>
             </div>
             <div className={'detail-item'}>
               <div className={'detail-label'}>Categoría</div>

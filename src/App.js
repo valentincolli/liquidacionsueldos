@@ -7,6 +7,7 @@ import Convenios from './Pages/Convenios';
 import NotFound from './Pages/NotFound';
 import Empleados from './Pages/Empleados';
 import './styles/main.scss';
+import ConvenioDetail from './Pages/ConvenioDetail';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/empleados" element={<Empleados />} />
               <Route path="/convenios" element={<Convenios/>}/>
+              <Route path="/convenios/:controller" element={<ConvenioDetail/>}/>
               <Route path="/liquidacion" element={<Liquidacion/>}/>
               <Route path="*" element={<NotFound />} />
             </Routes>

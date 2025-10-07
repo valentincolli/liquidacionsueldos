@@ -42,5 +42,8 @@ export const getDetallePago = (idPago) =>
 export const getConvenios = () =>
     axiosClient.get(`/convenios`).then((r)=>r.data);
 
+export const getConveniosNombre = (controller) =>
+    axiosClient.get(`/convenios/${controller}`).then((r)=>r.data);
+
 export const getAreas = () =>
     axiosClient.get(`/areas`).then((r)=>r.data);

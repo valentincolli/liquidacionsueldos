@@ -1,35 +1,138 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit, Download, Save, X, Printer, Calendar, Users, FileText, Plus, Trash2 } from 'lucide-react';
-import '../styles/components/_convenioDetail.css';
+import { ArrowLeft, Edit, Download, Save, X, Printer, Calendar, Users, FileText } from 'lucide-react';
+import '../styles/components/_convenioDetail.scss';
 import * as api from '../services/empleadosAPI'
 
 export default function ConvenioDetail() {
-  const { id } = useParams();
+  const { controller } = useParams();
   const navigate = useNavigate();
   const [convenio, setConvenio] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editableData, setEditableData] = useState(null);
-  const [isEditingBonifications, setIsEditingBonifications] = useState(false);
-  const [isEditingTitles, setIsEditingTitles] = useState(false);
+
+  // Normaliza respuesta del detalle a la forma que usa la UI
+  const normalizeConvenioDetail = (raw, controller) => {
+    if (!raw || typeof raw !== 'object') {
+      return {
+        name: controller?.toUpperCase() ?? 'CONVENIO',
+        description: '',
+        employeeCount: 0,
+        categoriesCount: 0,
+        status: 'Activo',
+        validFrom: null,
+        validTo: null,
+        lastUpdate: new Date().toISOString(),
+        salaryTable: { categories: [], bonifications: {}, titles: {}, notes: [] },
+        bonificacionesAreas: [],
+        bonificacionesFijas: [],
+        zonas: null,
+      };
+    }
+
+    const categories = Array.isArray(raw.categorias)
+      ? raw.categorias.map(c => ({
+          idCategoria: c.idCategoria,
+          cat: c.nombreCategoria,
+          basicSalary: c.basico,
+        }))
+      : [];
+
+    const bonifFijasDict = {};
+    if (Array.isArray(raw.bonificacionesFijas)) {
+      raw.bonificacionesFijas.forEach(b => {
+        bonifFijasDict[b.nombre] = Number(b.porcentaje) || 0;
+      });
+    }
+
+    const normalized = {
+      name: raw.nombreConvenio ?? controller?.toUpperCase() ?? 'CONVENIO',
+      description: '',
+      employeeCount: 0,
+      categoriesCount: categories.length,
+      status: 'Activo',
+      validFrom: null,
+      validTo: null,
+      lastUpdate: new Date().toISOString(),
+      salaryTable: {
+        categories,
+        bonifications: bonifFijasDict,
+        titles: {},
+        notes: [],
+      },
+      bonificacionesAreas: Array.isArray(raw.bonificacionesAreas) ? raw.bonificacionesAreas : [],
+      bonificacionesFijas: Array.isArray(raw.bonificacionesFijas) ? raw.bonificacionesFijas : [],
+      zonas: raw.zonas ?? null,
+    };
+
+    if (controller === 'uocra') {
+      const u = buildUocraFromZonas(raw);
+      normalized.salaryTable.uocra = u; 
+    }
+
+    return normalized;
+  };
+
+  // Normaliza nombres de categoría UOCRA a claves canónicas
+  const toUocraKey = (name = '') => {
+    const n = name.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+    if (n.includes('ayudante')) return 'ayudante';
+    if (n.includes('1/2') || n.includes('medio') || n.includes('1/2 oficial')) return 'medioOficial';
+    if (n.includes('oficial especializado')) return 'oficialEsp';
+    if (n === 'oficial' || n.includes('oficial ')) return 'oficial';
+    if (n.includes('sereno')) return 'sereno';
+    return name.replace(/\s+/g,'_'); // fallback
+  };
+
+  // A partir de raw.zonas arma headers y filas [{zona, ayudante, medioOficial, ...}]
+  const buildUocraFromZonas = (raw) => {
+    const zonas = Array.isArray(raw?.zonas) ? raw.zonas : [];
+
+    // Colectar categorías presentes y ordenarlas con prioridad conocida
+    const order = ['ayudante','medioOficial','oficial','oficialEsp','sereno'];
+    const labelFor = {
+      ayudante: 'Ayudante',
+      medioOficial: '1/2 Oficial',
+      oficial: 'Oficial',
+      oficialEsp: 'Oficial Especializado',
+      sereno: 'Sereno',
+    };
+
+    const present = new Set();
+    zonas.forEach(z => (z.categorias || []).forEach(c => present.add(toUocraKey(c.nombreCategoria))));
+
+    const headers = order.filter(k => present.has(k)).map(key => ({
+      key,
+      label: labelFor[key] || key,
+      sub: key === 'sereno' ? 'por mes' : '$ x hora',
+    }));
+
+    const rows = zonas.map(z => {
+      const r = { zona: z.nombre };
+      (z.categorias || []).forEach(c => {
+        const k = toUocraKey(c.nombreCategoria);
+        r[k] = Number(c.basico);
+      });
+      return r;
+    });
+
+    return { headers, rows };
+  };
 
   useEffect(() => {
-    const fetchConvenio = async () => {
+    const loadConvenio = async () => {
       try {
-        const response = await api.getConvenios();
-        const convenioData = response.data;
-        setConvenio(convenioData);
-        setEditableData(JSON.parse(JSON.stringify(convenioData)));
+        const raw = await api.getConveniosNombre(controller);
+        const norm = normalizeConvenioDetail(raw, controller);
+        setConvenio(norm);
+        setEditableData(norm);
     } catch (error) {
-        console.error('Error fetching convenio:', error);
-        if (window.showNotification) {
-          window.showNotification('Error al cargar el convenio', 'error');
-        }
+        console.error('Error cargando convenio:', error);
   }
     };
 
-    fetchConvenio();
-  }, [id]);
+    loadConvenio();
+  }, [controller]);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -38,9 +141,7 @@ export default function ConvenioDetail() {
   const handleSave = () => {
     setConvenio(editableData);
     setIsEditing(false);
-    if (window.showNotification) {
-      window.showNotification('Convenio actualizado exitosamente', 'success');
-    }
+    window.showNotification('Convenio actualizado exitosamente', 'success');
   };
 
   const handleCancel = () => {
@@ -58,95 +159,40 @@ export default function ConvenioDetail() {
 
   const updateSalaryValue = (catIndex, field, value) => {
     const newData = { ...editableData };
-    // Usar parseFloat solo para valores numéricos, mantener strings para texto
     const numericValue = parseFloat(value.replace(/[^0-9.,]/g, '').replace(',', ''));
+    if (!newData.salaryTable?.categories?.[catIndex]) return;
     newData.salaryTable.categories[catIndex][field] = isNaN(numericValue) ? 0 : numericValue;
     setEditableData(newData);
   };
 
-  const addBonification = () => {
-    const newKey = `nuevaBonificacion${Date.now()}`;
-    const newData = { ...editableData };
-    newData.salaryTable.bonifications[newKey] = 0;
-    setEditableData(newData);
+  // columnas en el mismo orden del diseño
+  const AREA_COLUMNS = ['Oficio', 'Técnica', 'Administrativa', 'Operaciones', 'Jerarquica', 'Funcional'];
+
+  const formatCurrencyAR = (n) =>
+    typeof n === 'number'
+      ? n.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 2 })
+      : '';
+
+  // bonifMap: clave `${idCategoria}|${Area}` => porcentaje (number)
+  const buildBonifMap = (list) => {
+    const map = {};
+    (list || []).forEach(b => {
+      // Aseguramos nombres iguales a columnas
+      let area = b.nombreArea;
+      // Corrige el acento en "Técnica"
+      if (area === 'Tecnica') area = 'Técnica';
+      map[`${b.idCategoria}|${area}`] = Number(b.porcentaje) || 0;
+    });
+    return map;
   };
 
-  const removeBonification = (key) => {
-    const newData = { ...editableData };
-    delete newData.salaryTable.bonifications[key];
-    setEditableData(newData);
-  };
-
-  const updateBonificationValue = (key, value) => {
-    const newData = { ...editableData };
-    const numericValue = parseFloat(value.replace(/[^0-9.,]/g, '').replace(',', ''));
-    newData.salaryTable.bonifications[key] = isNaN(numericValue) ? 0 : numericValue;
-    setEditableData(newData);
-  };
-
-  const addTitle = () => {
-    const newKey = `nuevoTitulo${Date.now()}`;
-    const newData = { ...editableData };
-    newData.salaryTable.titles[newKey] = { A: 0 };
-    setEditableData(newData);
-  };
-
-  const removeTitle = (key) => {
-    const newData = { ...editableData };
-    delete newData.salaryTable.titles[key];
-    setEditableData(newData);
-  };
-
-  const addTitleLevel = (titleKey) => {
-    const newData = { ...editableData };
-    const existingLevels = Object.keys(newData.salaryTable.titles[titleKey]);
-    const nextLevel = String.fromCharCode(65 + existingLevels.length); // A, B, C, D...
-    if (nextLevel <= 'Z') {
-      newData.salaryTable.titles[titleKey][nextLevel] = 0;
-      setEditableData(newData);
-    }
-  };
-
-  const removeTitleLevel = (titleKey, level) => {
-    const newData = { ...editableData };
-    delete newData.salaryTable.titles[titleKey][level];
-    setEditableData(newData);
-  };
-
-  const updateTitleValue = (titleKey, level, value) => {
-    const newData = { ...editableData };
-    const numericValue = parseFloat(value.replace(/[^0-9.,]/g, '').replace(',', ''));
-    newData.salaryTable.titles[titleKey][level] = isNaN(numericValue) ? 0 : numericValue;
-    setEditableData(newData);
-  };
-
-  const updateUOCRAValue = (catIndex, field, value) => {
-    const newData = { ...editableData };
-    const numericValue = parseFloat(value.replace(/[^0-9.,]/g, '').replace(',', ''));
-
-    if (field.startsWith('junio2025.')) {
-      // Handle Junio 2025 fields
-      const junioField = field.replace('junio2025.', '');
-      if (!newData.salaryTable.junio2025) {
-        newData.salaryTable.junio2025 = { categories: [...newData.salaryTable.categories] };
-      }
-      if (!newData.salaryTable.junio2025.categories[catIndex]) {
-        newData.salaryTable.junio2025.categories[catIndex] = { ...newData.salaryTable.categories[catIndex] };
-      }
-      newData.salaryTable.junio2025.categories[catIndex][junioField] = isNaN(numericValue) ? 0 : numericValue;
-    } else if (field.includes('.')) {
-      // Handle nested fields like may25.basicSalary, zonaC.additional
-      const [parentField, childField] = field.split('.');
-      if (!newData.salaryTable.categories[catIndex][parentField]) {
-        newData.salaryTable.categories[catIndex][parentField] = {};
-      }
-      newData.salaryTable.categories[catIndex][parentField][childField] = isNaN(numericValue) ? 0 : numericValue;
-    } else {
-      // Handle direct fields
-      newData.salaryTable.categories[catIndex][field] = isNaN(numericValue) ? 0 : numericValue;
-    }
-
-    setEditableData(newData);
+  // buscar básico cat 11 (por id o por nombre)
+  const getBase11 = (categories) => {
+    if (!Array.isArray(categories)) return 0;
+    const byId = categories.find(c => c.idCategoria === 11);
+    if (byId) return Number(byId.basicSalary) || 0;
+    const byName = categories.find(c => String(c.cat).includes('11'));
+    return byName ? (Number(byName.basicSalary) || 0) : 0;
   };
 
   if (!convenio) {
@@ -158,7 +204,7 @@ export default function ConvenioDetail() {
   }
 
   const currentData = isEditing ? editableData : convenio;
-
+  
   return (
     <div className="convenio-detail">
       {/* Header */}
@@ -169,7 +215,7 @@ export default function ConvenioDetail() {
             Volver a Convenios
           </button>
         </div>
-        
+
         <div className="header-content">
           <div className="header-info">
             <h1 className="detail-title">{currentData.name}</h1>
@@ -178,16 +224,18 @@ export default function ConvenioDetail() {
                 <Users className="meta-icon" />
                 <span>{currentData.employeeCount} empleados</span>
               </div>
-              <div className="meta-item">
-                <Calendar className="meta-icon" />
-                <span>Vigente hasta {new Date(currentData.validTo).toLocaleDateString('es-ES')}</span>
-              </div>
+              {currentData.validTo && (
+                <div className="meta-item">
+                  <Calendar className="meta-icon" />
+                  <span>Vigente hasta</span>
+                </div>
+              )}
               <div className={`status-badge ${currentData.status.toLowerCase()}`}>
                 {currentData.status}
               </div>
             </div>
           </div>
-          
+
           <div className="header-actions">
             {isEditing ? (
               <>
@@ -220,669 +268,154 @@ export default function ConvenioDetail() {
         </div>
       </div>
 
-      {/* Salary Table */}
-      <div className="salary-table-container">
-        {currentData.name === 'Luz y Fuerza' ? (
-          // Tabla formato Luz y Fuerza
-          <div className="salary-table luz-y-fuerza">
-            <div className="table-header">
-              <h2>ESCALAS SALARIALES - LUZ Y FUERZA</h2>
-              <p>Vigencia: {new Date(currentData.validFrom).toLocaleDateString('es-ES')} - {new Date(currentData.validTo).toLocaleDateString('es-ES')}</p>
-            </div>
-            
-            <table className="salary-grid">
-              <thead>
-                <tr>
-                  <th rowSpan="2">CAT</th>
-                  <th rowSpan="2">SUELDO BÁSICO</th>
-                  <th colSpan="5">BONIFICACIONES</th>
-                </tr>
-                <tr>
-                  <th>OFICIO</th>
-                  <th>TÉCNICA</th>
-                  <th>ADMINISTRATIVA</th>
-                  <th>OPERACIONES</th>
-                  <th>JERÁRQUICA</th>
-                  <th>FUNCIONAL</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentData.salaryTable.categories.map((category, index) => (
-                  <tr key={index}>
-                    <td className="category-cell">{category.cat}</td>
-                    <td className="salary-cell">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={`$${category.basicSalary.toLocaleString()}`}
-                          onChange={(e) => updateSalaryValue(index, 'basicSalary', e.target.value)}
-                          className="salary-input"
-                        />
-                      ) : (
-                        `$${category.basicSalary.toLocaleString()}`
-                      )}
-                    </td>
-                    <td className="bonus-cell">
-                      {category.office ? (
-                        isEditing ? (
-                          <input
-                            type="text"
-                            value={`$${category.office.toLocaleString()}`}
-                            onChange={(e) => updateSalaryValue(index, 'office', e.target.value)}
-                            className="bonus-input"
-                          />
-                        ) : (
-                          `$${category.office.toLocaleString()}`
-                        )
-                      ) : ''}
-                    </td>
-                    <td className="bonus-cell">
-                      {category.technical ? (
-                        isEditing ? (
-                          <input
-                            type="number"
-                            value={category.technical}
-                            onChange={(e) => updateSalaryValue(index, 'technical', e.target.value)}
-                            className="bonus-input"
-                          />
-                        ) : (
-                          `$${category.technical.toLocaleString()}`
-                        )
-                      ) : ''}
-                    </td>
-                    <td className="bonus-cell">
-                      {category.administrative ? (
-                        isEditing ? (
-                          <input
-                            type="number"
-                            value={category.administrative}
-                            onChange={(e) => updateSalaryValue(index, 'administrative', e.target.value)}
-                            className="bonus-input"
-                          />
-                        ) : (
-                          `$${category.administrative.toLocaleString()}`
-                        )
-                      ) : ''}
-                    </td>
-                    <td className="bonus-cell">
-                      {category.operations ? (
-                        isEditing ? (
-                          <input
-                            type="number"
-                            value={category.operations}
-                            onChange={(e) => updateSalaryValue(index, 'operations', e.target.value)}
-                            className="bonus-input"
-                          />
-                        ) : (
-                          `$${category.operations.toLocaleString()}`
-                        )
-                      ) : ''}
-                    </td>
-                    <td className="bonus-cell">
-                      {category.hierarchical ? (
-                        isEditing ? (
-                          <input
-                            type="number"
-                            value={category.hierarchical}
-                            onChange={(e) => updateSalaryValue(index, 'hierarchical', e.target.value)}
-                            className="bonus-input"
-                          />
-                        ) : (
-                          `$${category.hierarchical.toLocaleString()}`
-                        )
-                      ) : ''}
-                    </td>
-                    <td className="bonus-cell">
-                      {category.functional ? (
-                        isEditing ? (
-                          <input
-                            type="text"
-                            value={`$${category.functional.toLocaleString()}`}
-                            onChange={(e) => updateSalaryValue(index, 'functional', e.target.value)}
-                            className="bonus-input"
-                          />
-                        ) : (
-                          `$${category.functional.toLocaleString()}`
-                        )
-                      ) : ''}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {/* Additional bonifications section */}
-            <div className="additional-bonifications">
-              <div className="bonif-section">
-                <div className="section-header">
-                  <h3>BONIFICACIONES ADICIONALES</h3>
-                  {currentData.name === 'Luz y Fuerza' && (
-                    <div className="section-actions">
-                      <button
-                        className="action-btn edit-small"
-                        onClick={() => setIsEditingBonifications(!isEditingBonifications)}
-                      >
-                        <Edit className="action-icon-small" />
-                        {isEditingBonifications ? 'Listo' : 'Editar'}
-                      </button>
-                      {isEditingBonifications && (
-                        <button className="action-btn add-small" onClick={addBonification}>
-                          <Plus className="action-icon-small" />
-                          Agregar
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-                <div className="bonif-grid">
-                  {Object.entries(currentData.salaryTable.bonifications).map(([key, value]) => (
-                    <div key={key} className="bonif-item">
-                      <span className="bonif-label">
-                        {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                      </span>
-                      {isEditingBonifications ? (
-                        <div className="bonif-edit-group">
-                          <input
-                            type="text"
-                            value={`$${value.toLocaleString()}`}
-                            onChange={(e) => updateBonificationValue(key, e.target.value)}
-                            className="bonif-input"
-                          />
-                          <button
-                            className="remove-btn"
-                            onClick={() => removeBonification(key)}
-                            title="Eliminar bonificación"
-                          >
-                            <Trash2 className="remove-icon" />
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="bonif-value">${value.toLocaleString()}</span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="titles-section">
-                <div className="section-header">
-                  <h3>TÍTULOS</h3>
-                  {currentData.name === 'Luz y Fuerza' && (
-                    <div className="section-actions">
-                      <button
-                        className="action-btn edit-small"
-                        onClick={() => setIsEditingTitles(!isEditingTitles)}
-                      >
-                        <Edit className="action-icon-small" />
-                        {isEditingTitles ? 'Listo' : 'Editar'}
-                      </button>
-                      {isEditingTitles && (
-                        <button className="action-btn add-small" onClick={addTitle}>
-                          <Plus className="action-icon-small" />
-                          Agregar Título
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-                <div className="titles-grid">
-                  {Object.entries(currentData.salaryTable.titles).map(([key, values]) => (
-                    <div key={key} className="title-group">
-                      <div className="title-header">
-                        <span className="title-name">{key.toUpperCase()}</span>
-                        {isEditingTitles && (
-                          <div className="title-actions">
-                            <button
-                              className="add-level-btn"
-                              onClick={() => addTitleLevel(key)}
-                              title="Agregar nivel"
-                            >
-                              <Plus className="add-icon" />
-                            </button>
-                            <button
-                              className="remove-btn"
-                              onClick={() => removeTitle(key)}
-                              title="Eliminar título"
-                            >
-                              <Trash2 className="remove-icon" />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                      {Object.entries(values).map(([letter, amount]) => (
-                        <div key={letter} className="title-item">
-                          <span className="title-letter">{letter}</span>
-                          {isEditingTitles ? (
-                            <div className="title-edit-group">
-                              <input
-                                type="text"
-                                value={`$${amount.toLocaleString()}`}
-                                onChange={(e) => updateTitleValue(key, letter, e.target.value)}
-                                className="title-input"
-                              />
-                              <button
-                                className="remove-level-btn"
-                                onClick={() => removeTitleLevel(key, letter)}
-                                title="Eliminar nivel"
-                              >
-                                <X className="remove-icon-small" />
-                              </button>
-                            </div>
-                          ) : (
-                            <span className="title-amount">${amount.toLocaleString()}</span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          // Tabla formato UOCRA con estilo Luz y Fuerza
-          <div className="salary-table luz-y-fuerza">
-            <div className="table-header">
-              <h2>UOCRA - JORNALES DE SALARIOS BÁSICOS CON VIGENCIA A PARTIR DEL 01 DE MAYO 2025</h2>
-            </div>
-
-            <table className="salary-grid">
-              <thead>
-                <tr>
-                  <th rowSpan="2">Mes</th>
-                  <th rowSpan="2">Categoria</th>
-                  <th colSpan="3">ZONA "A"</th>
-                  <th colSpan="3">ZONA "B"</th>
-                  <th colSpan="3">ZONA "C"</th>
-                  <th colSpan="3">ZONA "C-Austral"</th>
-                </tr>
-                <tr>
-                  <th>Salario Básico</th>
-                  <th>Adicional Zona</th>
-                  <th>Total</th>
-                  <th>Salario Básico</th>
-                  <th>Adicional Zona</th>
-                  <th>Total</th>
-                  <th>Salario Básico</th>
-                  <th>Adicional Zona</th>
-                  <th>Total</th>
-                  <th>Salario Básico</th>
-                  <th>Adicional Zona</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentData.salaryTable.categories.map((category, index) => (
-                  <tr key={index}>
-                    <td className="month-cell">{index === 0 ? 'may-25' : ''}</td>
-                    <td className="category-cell">{category.cat}</td>
-                    <td className="salary-cell">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={`$${typeof category.basicSalary === 'number' ? category.basicSalary.toLocaleString() : category.basicSalary}`}
-                          onChange={(e) => updateUOCRAValue(index, 'basicSalary', e.target.value)}
-                          className="salary-input"
-                        />
-                      ) : (
-                        `$${typeof category.basicSalary === 'number' ? category.basicSalary.toLocaleString() : category.basicSalary}`
-                      )}
-                    </td>
-                    <td className="zone-cell">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={`$${typeof category.zone === 'number' ? category.zone.toLocaleString() : category.zone}`}
-                          onChange={(e) => updateUOCRAValue(index, 'zone', e.target.value)}
-                          className="bonus-input"
-                        />
-                      ) : (
-                        `$${typeof category.zone === 'number' ? category.zone.toLocaleString() : category.zone}`
-                      )}
-                    </td>
-                    <td className="total-cell">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={`$${typeof category.total === 'number' ? category.total.toLocaleString() : category.total}`}
-                          onChange={(e) => updateUOCRAValue(index, 'total', e.target.value)}
-                          className="bonus-input"
-                        />
-                      ) : (
-                        `$${typeof category.total === 'number' ? category.total.toLocaleString() : category.total}`
-                      )}
-                    </td>
-                    <td className="salary-cell">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={`$${typeof (category.may25?.basicSalary || category.basicSalary) === 'number' ? (category.may25?.basicSalary || category.basicSalary).toLocaleString() : (category.may25?.basicSalary || category.basicSalary)}`}
-                          onChange={(e) => updateUOCRAValue(index, 'may25.basicSalary', e.target.value)}
-                          className="salary-input"
-                        />
-                      ) : (
-                        `$${typeof (category.may25?.basicSalary || category.basicSalary) === 'number' ? (category.may25?.basicSalary || category.basicSalary).toLocaleString() : (category.may25?.basicSalary || category.basicSalary)}`
-                      )}
-                    </td>
-                    <td className="zone-cell">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={`$${typeof (category.may25?.additional || category.zone) === 'number' ? (category.may25?.additional || category.zone).toLocaleString() : (category.may25?.additional || category.zone)}`}
-                          onChange={(e) => updateUOCRAValue(index, 'may25.additional', e.target.value)}
-                          className="bonus-input"
-                        />
-                      ) : (
-                        `$${typeof (category.may25?.additional || category.zone) === 'number' ? (category.may25?.additional || category.zone).toLocaleString() : (category.may25?.additional || category.zone)}`
-                      )}
-                    </td>
-                    <td className="total-cell">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={`$${typeof (category.may25?.total || category.total) === 'number' ? (category.may25?.total || category.total).toLocaleString() : (category.may25?.total || category.total)}`}
-                          onChange={(e) => updateUOCRAValue(index, 'may25.total', e.target.value)}
-                          className="bonus-input"
-                        />
-                      ) : (
-                        `$${typeof (category.may25?.total || category.total) === 'number' ? (category.may25?.total || category.total).toLocaleString() : (category.may25?.total || category.total)}`
-                      )}
-                    </td>
-                    <td className="salary-cell">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={`$${typeof (category.zonaC?.basicSalary || category.basicSalary) === 'number' ? (category.zonaC?.basicSalary || category.basicSalary).toLocaleString() : (category.zonaC?.basicSalary || category.basicSalary)}`}
-                          onChange={(e) => updateUOCRAValue(index, 'zonaC.basicSalary', e.target.value)}
-                          className="salary-input"
-                        />
-                      ) : (
-                        `$${typeof (category.zonaC?.basicSalary || category.basicSalary) === 'number' ? (category.zonaC?.basicSalary || category.basicSalary).toLocaleString() : (category.zonaC?.basicSalary || category.basicSalary)}`
-                      )}
-                    </td>
-                    <td className="zone-cell">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={`$${typeof (category.zonaC?.additional || category.zone) === 'number' ? (category.zonaC?.additional || category.zone).toLocaleString() : (category.zonaC?.additional || category.zone)}`}
-                          onChange={(e) => updateUOCRAValue(index, 'zonaC.additional', e.target.value)}
-                          className="bonus-input"
-                        />
-                      ) : (
-                        `$${typeof (category.zonaC?.additional || category.zone) === 'number' ? (category.zonaC?.additional || category.zone).toLocaleString() : (category.zonaC?.additional || category.zone)}`
-                      )}
-                    </td>
-                    <td className="total-cell">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={`$${typeof (category.zonaC?.total || category.total) === 'number' ? (category.zonaC?.total || category.total).toLocaleString() : (category.zonaC?.total || category.total)}`}
-                          onChange={(e) => updateUOCRAValue(index, 'zonaC.total', e.target.value)}
-                          className="bonus-input"
-                        />
-                      ) : (
-                        `$${typeof (category.zonaC?.total || category.total) === 'number' ? (category.zonaC?.total || category.total).toLocaleString() : (category.zonaC?.total || category.total)}`
-                      )}
-                    </td>
-                    <td className="salary-cell">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={`$${typeof category.basicSalary === 'number' ? category.basicSalary.toLocaleString() : category.basicSalary}`}
-                          onChange={(e) => updateUOCRAValue(index, 'basicSalary', e.target.value)}
-                          className="salary-input"
-                        />
-                      ) : (
-                        `$${typeof category.basicSalary === 'number' ? category.basicSalary.toLocaleString() : category.basicSalary}`
-                      )}
-                    </td>
-                    <td className="zone-cell">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={`$${typeof category.zone === 'number' ? category.zone.toLocaleString() : category.zone}`}
-                          onChange={(e) => updateUOCRAValue(index, 'zone', e.target.value)}
-                          className="bonus-input"
-                        />
-                      ) : (
-                        `$${typeof category.zone === 'number' ? category.zone.toLocaleString() : category.zone}`
-                      )}
-                    </td>
-                    <td className="total-cell">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={`$${typeof category.total === 'number' ? category.total.toLocaleString() : category.total}`}
-                          onChange={(e) => updateUOCRAValue(index, 'total', e.target.value)}
-                          className="bonus-input"
-                        />
-                      ) : (
-                        `$${typeof category.total === 'number' ? category.total.toLocaleString() : category.total}`
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            <div className="uocra-notes">
-              <div className="notes-header">
-                <FileText className="notes-icon" />
-                <h4>Información Adicional</h4>
-              </div>
-
-              <div className="highlight-note">
-                <div className="highlight-icon">💰</div>
-                <p><strong>Suma no remunerativa mensual liquidada quincenalmente</strong></p>
-              </div>
-
-              <div className="notes-content">
-                <h5>Escalas por Zona:</h5>
-                <div className="notes-grid">
-                  {currentData.salaryTable.notes.map((note, index) => (
-                    <div key={index} className="note-item">
-                      <div className="note-bullet">•</div>
-                      <p>{note}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Junio 2025 table */}
-            {currentData.salaryTable.junio2025 && (
-              <div className="junio-2025-section">
-                <h3>JORNALES DE SALARIOS BÁSICOS CON VIGENCIA A PARTIR DEL 1 DE JUNIO 2025</h3>
-                <table className="salary-grid">
-                  <thead>
-                    <tr>
-                      <th rowSpan="2">Mes</th>
-                      <th rowSpan="2">Categoria</th>
-                      <th colSpan="3">ZONA "A"</th>
-                      <th colSpan="3">ZONA "B"</th>
-                      <th colSpan="3">ZONA "C"</th>
-                      <th colSpan="3">ZONA "C-Austral"</th>
-                    </tr>
-                    <tr>
-                      <th>Salario Básico</th>
-                      <th>Adicional Zona</th>
-                      <th>Total</th>
-                      <th>Salario Básico</th>
-                      <th>Adicional Zona</th>
-                      <th>Total</th>
-                      <th>Salario Básico</th>
-                      <th>Adicional Zona</th>
-                      <th>Total</th>
-                      <th>Salario Básico</th>
-                      <th>Adicional Zona</th>
-                      <th>Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {currentData.salaryTable.junio2025.categories.map((category, index) => (
-                      <tr key={index}>
-                        <td className="month-cell">{index === 0 ? 'jun-25' : ''}</td>
-                        <td className="category-cell">{category.cat}</td>
-                        <td className="salary-cell">
-                          {isEditing ? (
-                            <input
-                              type="text"
-                              value={`$${category.basicSalary}`}
-                              onChange={(e) => updateUOCRAValue(index, 'junio2025.basicSalary', e.target.value)}
-                              className="salary-input"
-                            />
-                          ) : (
-                            `$${category.basicSalary}`
-                          )}
-                        </td>
-                        <td className="zone-cell">
-                          {isEditing ? (
-                            <input
-                              type="text"
-                              value={`$${category.zone}`}
-                              onChange={(e) => updateUOCRAValue(index, 'junio2025.zone', e.target.value)}
-                              className="bonus-input"
-                            />
-                          ) : (
-                            `$${category.zone}`
-                          )}
-                        </td>
-                        <td className="total-cell">
-                          {isEditing ? (
-                            <input
-                              type="text"
-                              value={`$${category.total}`}
-                              onChange={(e) => updateUOCRAValue(index, 'junio2025.total', e.target.value)}
-                              className="bonus-input"
-                            />
-                          ) : (
-                            `$${category.total}`
-                          )}
-                        </td>
-                        <td className="salary-cell">
-                          {isEditing ? (
-                            <input
-                              type="text"
-                              value={`$${category.basicSalary2}`}
-                              onChange={(e) => updateUOCRAValue(index, 'junio2025.basicSalary2', e.target.value)}
-                              className="salary-input"
-                            />
-                          ) : (
-                            `$${category.basicSalary2}`
-                          )}
-                        </td>
-                        <td className="zone-cell">
-                          {isEditing ? (
-                            <input
-                              type="text"
-                              value={`$${category.additional}`}
-                              onChange={(e) => updateUOCRAValue(index, 'junio2025.additional', e.target.value)}
-                              className="bonus-input"
-                            />
-                          ) : (
-                            `$${category.additional}`
-                          )}
-                        </td>
-                        <td className="total-cell">
-                          {isEditing ? (
-                            <input
-                              type="text"
-                              value={`$${category.total2}`}
-                              onChange={(e) => updateUOCRAValue(index, 'junio2025.total2', e.target.value)}
-                              className="bonus-input"
-                            />
-                          ) : (
-                            `$${category.total2}`
-                          )}
-                        </td>
-                        <td className="salary-cell">
-                          {isEditing ? (
-                            <input
-                              type="text"
-                              value={`$${category.basicSalary}`}
-                              onChange={(e) => updateUOCRAValue(index, 'junio2025.basicSalaryC', e.target.value)}
-                              className="salary-input"
-                            />
-                          ) : (
-                            `$${category.basicSalary}`
-                          )}
-                        </td>
-                        <td className="zone-cell">
-                          {isEditing ? (
-                            <input
-                              type="text"
-                              value={`$${category.zonaCAdditional}`}
-                              onChange={(e) => updateUOCRAValue(index, 'junio2025.zonaCAdditional', e.target.value)}
-                              className="bonus-input"
-                            />
-                          ) : (
-                            `$${category.zonaCAdditional}`
-                          )}
-                        </td>
-                        <td className="total-cell">
-                          {isEditing ? (
-                            <input
-                              type="text"
-                              value={`$${category.totalZonaC}`}
-                              onChange={(e) => updateUOCRAValue(index, 'junio2025.totalZonaC', e.target.value)}
-                              className="bonus-input"
-                            />
-                          ) : (
-                            `$${category.totalZonaC}`
-                          )}
-                        </td>
-                        <td className="salary-cell">
-                          {isEditing ? (
-                            <input
-                              type="text"
-                              value={`$${category.basicSalary}`}
-                              onChange={(e) => updateUOCRAValue(index, 'junio2025.basicSalaryCaustral', e.target.value)}
-                              className="salary-input"
-                            />
-                          ) : (
-                            `$${category.basicSalary}`
-                          )}
-                        </td>
-                        <td className="zone-cell">
-                          {isEditing ? (
-                            <input
-                              type="text"
-                              value={`$${category.zone}`}
-                              onChange={(e) => updateUOCRAValue(index, 'junio2025.zoneCaustral', e.target.value)}
-                              className="bonus-input"
-                            />
-                          ) : (
-                            `$${category.zone}`
-                          )}
-                        </td>
-                        <td className="total-cell">
-                          {isEditing ? (
-                            <input
-                              type="text"
-                              value={`$${category.total}`}
-                              onChange={(e) => updateUOCRAValue(index, 'junio2025.totalCaustral', e.target.value)}
-                              className="bonus-input"
-                            />
-                          ) : (
-                            `$${category.total}`
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+      {/* Información General */}
+      <div className="general-info card">
+        <div className="info-row">
+          <div><strong>Convenio:</strong> {currentData.name}</div>
+          <div><strong>Categorías:</strong> {currentData.categoriesCount ?? '—'}</div>
+        </div>
+        {currentData.description && (
+          <div className="info-row">
+            <div><strong>Descripción:</strong> {currentData.description}</div>
           </div>
         )}
       </div>
 
+      {/* Tabla salarial (solo si existe) */}
+      <div className="salary-table-container">
+      {controller === 'lyf' && (
+      <div className="salary-table luz-y-fuerza">
+        <div className="table-header">
+          <h2>ESCALAS SALARIALES - LUZ Y FUERZA</h2>
+        </div>
+
+        {(() => {
+          const data = currentData; // isEditing ? editableData : convenio, ya lo tenés arriba
+          const cats = [...(data.salaryTable?.categories || [])]
+            .sort((a, b) => (a.idCategoria ?? 0) - (b.idCategoria ?? 0));
+          const bonifMap = buildBonifMap(data.bonificacionesAreas);
+          const base11 = getBase11(cats);
+
+          const onEditBasic = (idx, value) => {
+            // actualiza el básico de esa fila (y si es cat 11, se recalculan todos al re-render)
+            const num = Number(
+              String(value).replace(/[^\d.,-]/g, '').replace(/\./g, '').replace(',', '.')
+            );
+            updateSalaryValue(idx, 'basicSalary', isNaN(num) ? 0 : num);
+          };
+
+          const bonusAmount = (idCat, area) => {
+            const pct = bonifMap[`${idCat}|${area}`];
+            if (!pct) return ''; // celda vacía si no aplica
+            const monto = base11 * (pct / 100);
+            return formatCurrencyAR(monto);
+          };
+
+          return (
+            <table className="salary-grid">
+              <thead>
+                <tr>
+                  <th>CAT</th>
+                  <th>SUELDO BÁSICO</th>
+                  <th colSpan={AREA_COLUMNS.length} style={{ textAlign: 'center' }}>BONIFICACIONES</th>
+                </tr>
+                <tr>
+                  {['', ''].concat(AREA_COLUMNS).map((hdr, i) => (
+                    <th key={i}>{hdr}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {cats.map((row, idx) => (
+                  <tr key={row.idCategoria ?? idx}>
+                    <td className="category-cell">
+                      {row.idCategoria ?? (row.cat ?? idx + 1)}
+                    </td>
+
+                    <td className="salary-cell">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          className="salary-input"
+                          value={row.basicSalary ?? 0}
+                          onChange={(e) => onEditBasic(idx, e.target.value)}
+                        />
+                      ) : (
+                        formatCurrencyAR(row.basicSalary ?? 0)
+                      )}
+                    </td>
+
+                    {AREA_COLUMNS.map((area) => (
+                      <td key={area} className="bonus-cell">
+                        {bonusAmount(row.idCategoria, area)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          );
+        })()}
+        <div className="additional-bonifications">
+            <div className="bonif-section">{/* … */}</div>
+            <div className="titles-section">{/* … */}</div>
+        </div>
+      </div>
+    )}
+    {controller === 'uocra' && (
+      <div className="salary-table uocra">
+        <div className="table-header">
+          <h2>UOCRA - Escalas por Zona</h2>
+        </div>
+
+        {(() => {
+          const u = currentData?.salaryTable?.uocra;
+          if (!u || !u.headers?.length) {
+            return <div style={{ padding: '1rem', color: 'var(--text-secondary)' }}>No hay datos de zonas para mostrar.</div>;
+          }
+
+          return (
+            <table className="uocra-table">
+              <thead>
+                <tr>
+                  <th rowSpan={2} style={{ minWidth: 90 }}>Zona</th>
+                  {u.headers.map(h => (
+                    <th key={h.key} colSpan={1}>{h.label}</th>
+                  ))}
+                </tr>
+                <tr>
+                  {u.headers.map(h => (
+                    <th key={`${h.key}-sub`}>{h.sub}</th>
+                  ))}
+                </tr>
+              </thead>
+
+              <tbody>
+                {u.rows.map((r, idx) => (
+                  <tr key={r.zona ?? idx}>
+                    <td className="month-cell" style={{ writingMode: 'horizontal-tb' }}>{r.zona}</td>
+                    {u.headers.map(h => (
+                      <td key={h.key} className="salary-cell">
+                        {typeof r[h.key] === 'number'
+                          ? r[h.key].toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                          : ''}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          );
+        })()}
+      </div>
+    )}
+      </div>
       {/* Footer info */}
       <div className="detail-footer">
         <div className="footer-info">
           <div className="info-item">
             <FileText className="info-icon" />
-            <span>Última actualización: {new Date(currentData.lastUpdate).toLocaleDateString('es-ES')}</span>
+            <span>Última actualización:</span>
           </div>
         </div>
       </div>

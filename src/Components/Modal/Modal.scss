@@ -446,6 +446,54 @@
   }
 }
 
+/* ====== Conceptos adicionales ====== */
+.employee-form {
+  .conceptos-section {
+    .conceptos-list {
+      display: flex;
+      flex-direction: column;
+      gap: $spacing-2;
+      margin-top: $spacing-2;
+    }
+
+    .concepto-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: $spacing-3;
+      padding: $spacing-2 $spacing-3;
+      border: 1px solid $color-gray-200;
+      border-radius: $border-radius;
+      background: $color-white;
+
+      .checkbox-container {
+        display: flex;
+        align-items: center;
+        gap: $spacing-2;
+      }
+
+      .units-input {
+        display: flex;
+        align-items: center;
+        gap: $spacing-2;
+
+        label {
+          font-size: $font-size-sm;
+          color: $color-gray-700;
+        }
+
+        input[type='number'] {
+          width: 120px;
+          padding: $spacing-2;
+          border: 1px solid $color-gray-300;
+          border-radius: $border-radius;
+          font-size: $font-size-sm;
+        }
+      }
+    }
+  }
+}
+
 /* Responsive pequeño */
 @media (max-width: 480px) {
   .employee-form .form-section .form-grid .form-group {
