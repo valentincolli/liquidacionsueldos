@@ -9,8 +9,8 @@ export const createEmployee = (dto) =>
 export const updateEmployee = (legajo, data) =>
     axiosClient.put(`empleados/${legajo}`, data).then((r)=> r.data);
 
-export const deleteEmployee = (legajo) =>
-    axiosClient.delete(`empleados/${legajo}`);
+export const updateStateEmployee = (legajo) =>
+    axiosClient.put(`empleados/${legajo}/estado`).then((r)=> r.data);
 
 export const getEmpleadoByLegajo = (legajo) =>
     axiosClient.get(`/empleados/${legajo}`).then((r)=>r.data);
@@ -44,6 +44,12 @@ export const getConvenios = () =>
 
 export const getConveniosNombre = (controller) =>
     axiosClient.get(`/convenios/${controller}`).then((r)=>r.data);
+
+export const updateBasicoLyF = (lista) =>
+    axiosClient.put(`/convenios/lyf/basico`, lista).then((r)=>r.data);
+
+export const updateBasicoUocra = (lista) =>
+    axiosClient.put(`/convenios/uocra/basico`, lista).then((r)=>r.data);
 
 export const getAreas = () =>
     axiosClient.get(`/areas`).then((r)=>r.data);

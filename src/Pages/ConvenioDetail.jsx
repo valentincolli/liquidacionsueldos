@@ -77,11 +77,66 @@ export default function ConvenioDetail() {
   const toUocraKey = (name = '') => {
     const n = name.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
     if (n.includes('ayudante')) return 'ayudante';
-    if (n.includes('1/2') || n.includes('medio') || n.includes('1/2 oficial')) return 'medioOficial';
+    if (n.includes('1/2') || n.includes('medio')) return 'medioOficial';
     if (n.includes('oficial especializado')) return 'oficialEsp';
     if (n === 'oficial' || n.includes('oficial ')) return 'oficial';
     if (n.includes('sereno')) return 'sereno';
-    return name.replace(/\s+/g,'_'); // fallback
+    return name.replace(/\s+/g, '_');
+  };
+
+  // Armar el payload para LUZ Y FUERZA
+  const buildLyfPayload = (editableData) => {
+    const rows = editableData.salaryTable?.categories || [];
+    return rows.map(r => ({
+      idCategoria: r.idCategoria,
+      basico: Number(r.basicSalary) || 0,
+    }));
+  };
+
+  // AREA UOCRA
+  // rowIdx: índice de fila (zona)
+  // key: 'ayudante' | 'medioOficial' | 'oficial' | 'oficialEsp' | 'sereno' (según headers)
+  const updateUOCRAValue = (rowIdx, key, value) => {
+    setEditableData(prev => {
+      if (!prev?.salaryTable?.uocra?.rows?.[rowIdx]) return prev;
+
+      const next = { ...prev };
+      const rows = [...next.salaryTable.uocra.rows];
+      rows[rowIdx] = { ...rows[rowIdx], [key]: parseNumber(value) };
+
+      next.salaryTable = { ...next.salaryTable, uocra: { ...next.salaryTable.uocra, rows } };
+      return next;
+    });
+  };
+
+  const parseNumber = (value) => {
+    const str = String(value ?? "");
+    const clean = str.replace(/[^0-9.,-]/g, "").replace(",", ".");
+    const num = parseFloat(clean);
+    return Number.isNaN(num) ? 0 : num;
+  };
+
+  const buildUocraPayload = (editableData, convenio) => {
+    const rows = editableData?.salaryTable?.uocra?.rows ?? [];
+    const zonas = convenio?.zonas ?? [];
+    const payload = [];
+
+    zonas.forEach((z, rowIdx) => {
+    const rowEdited = rows[rowIdx] || {};
+    (z.categorias || []).forEach(cat => {
+      const key = toUocraKey(cat.nombreCategoria);
+      const basico = Number(rowEdited[key]);
+      if (!Number.isNaN(basico)) {
+        payload.push({
+          idCategoria: cat.idCategoria,
+          idZona: z.idZona,
+          basico
+        });
+      }
+    });
+  });
+
+    return payload;
   };
 
   // A partir de raw.zonas arma headers y filas [{zona, ayudante, medioOficial, ...}]
@@ -138,10 +193,24 @@ export default function ConvenioDetail() {
     setIsEditing(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    try {
+      if (controller === 'lyf') {
+        const payload = buildLyfPayload(editableData);
+        await api.updateBasicoLyF(payload);
+      } else if (controller === 'uocra') {
+        const payload = buildUocraPayload(editableData, convenio);
+        console.log('UOCRA payload:', payload);
+        await api.updateBasicoUocra(payload);
+      }
+
     setConvenio(editableData);
     setIsEditing(false);
     window.showNotification('Convenio actualizado exitosamente', 'success');
+    } catch (error) {
+      console.error('Error guardando convenio:', error);
+      window.showNotification('Error al guardar el convenio', 'error');
+    }
   };
 
   const handleCancel = () => {
@@ -155,14 +224,6 @@ export default function ConvenioDetail() {
 
   const handleGoBack = () => {
     navigate('/convenios');
-  };
-
-  const updateSalaryValue = (catIndex, field, value) => {
-    const newData = { ...editableData };
-    const numericValue = parseFloat(value.replace(/[^0-9.,]/g, '').replace(',', ''));
-    if (!newData.salaryTable?.categories?.[catIndex]) return;
-    newData.salaryTable.categories[catIndex][field] = isNaN(numericValue) ? 0 : numericValue;
-    setEditableData(newData);
   };
 
   // columnas en el mismo orden del diseño
@@ -296,12 +357,29 @@ export default function ConvenioDetail() {
           const bonifMap = buildBonifMap(data.bonificacionesAreas);
           const base11 = getBase11(cats);
 
-          const onEditBasic = (idx, value) => {
-            // actualiza el básico de esa fila (y si es cat 11, se recalculan todos al re-render)
-            const num = Number(
-              String(value).replace(/[^\d.,-]/g, '').replace(/\./g, '').replace(',', '.')
-            );
-            updateSalaryValue(idx, 'basicSalary', isNaN(num) ? 0 : num);
+          const onEditBasic = (catIndex, value) => {
+            // Siempre convertir a string por seguridad
+            const strValue = String(value ?? "");
+
+            // Limpiar cualquier carácter que no sea número, punto o coma
+            const cleanValue = strValue.replace(/[^0-9.,]/g, "").replace(",", ".");
+
+            // Convertir a número
+            const numericValue = parseFloat(cleanValue);
+            const finalValue = isNaN(numericValue) ? 0 : numericValue;
+
+            // Actualizar estado
+            setEditableData(prev => {
+              const newData = { ...prev };
+              if (!newData.salaryTable?.categories?.[catIndex]) return newData;
+
+              newData.salaryTable.categories[catIndex] = {
+                ...newData.salaryTable.categories[catIndex],
+                basicSalary: finalValue
+              };
+
+              return newData;
+            });
           };
 
           const bonusAmount = (idCat, area) => {
@@ -374,6 +452,10 @@ export default function ConvenioDetail() {
             return <div style={{ padding: '1rem', color: 'var(--text-secondary)' }}>No hay datos de zonas para mostrar.</div>;
           }
 
+          const fmt = (n) => typeof n === 'number'
+            ? n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : '';
+
           return (
             <table className="uocra-table">
               <thead>
@@ -391,14 +473,22 @@ export default function ConvenioDetail() {
               </thead>
 
               <tbody>
-                {u.rows.map((r, idx) => (
-                  <tr key={r.zona ?? idx}>
+                {(isEditing ? editableData.salaryTable.uocra.rows : u.rows).map((r, rowIdx) => (
+                  <tr key={r.zona ?? rowIdx}>
                     <td className="month-cell" style={{ writingMode: 'horizontal-tb' }}>{r.zona}</td>
+
                     {u.headers.map(h => (
                       <td key={h.key} className="salary-cell">
-                        {typeof r[h.key] === 'number'
-                          ? r[h.key].toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                          : ''}
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            className="salary-input"
+                            value={r[h.key] ?? ''}
+                            onChange={(e) => updateUOCRAValue(rowIdx, h.key, e.target.value)}
+                          />
+                        ) : (
+                          fmt(r[h.key])
+                        )}
                       </td>
                     ))}
                   </tr>

@@ -113,19 +113,21 @@ export default function Empleados() {
     }
   };
 
-  const handleDeactivateEmployee = (employee) => {
-    if (window.confirm(`¿Está seguro de que desea dar de baja a ${`${employee.nombre} ${employee.apellido}`}?`)) {
-      setEmployeeList(prev =>
-        prev.map(emp =>
-          emp.legajo === employee.legajo
-            ? { ...emp, status: 'Inactivo' }
-            : emp
-        )
-      );
-        window.showNotification?.(`Empleado ${employee.nombre} ${employee.apellido} dado de baja`, 'info');
-      }
-      console.log('Empleado dado de baja:', employee.name);
+  const handleStateEmployee = (employee) => {
+    if (employee.estado === 'DADO_DE_BAJA') {
+      if (window.confirm(`¿Está seguro de que desea dar de alta a ${`${employee.nombre} ${employee.apellido}`}?`)) {
+        api.updateStateEmployee(employee.legajo);
+        window.showNotification?.(`Empleado ${employee.nombre} ${employee.apellido} dado de alta`, 'info');
+      }}
+    if (employee.estado === 'ACTIVO') {
+        if (window.confirm(`¿Está seguro de que desea dar de baja a ${`${employee.nombre} ${employee.apellido}`}?`)) {
+            api.updateStateEmployee(employee.legajo);
+            window.showNotification?.(`Empleado ${employee.nombre} ${employee.apellido} dado de baja`, 'info');
+          }
+          console.log('Empleado dado de baja:', employee.name);
     }
+    loadEmployees();
+  }
 
   const closeModals = () => {
     setShowViewModal(false);
@@ -282,7 +284,7 @@ export default function Empleados() {
                     <Tooltip content="Dar de baja empleado" position="top">
                       <button
                         className="action-icon-button deactivate-action"
-                        onClick={() => handleDeactivateEmployee(employee)}
+                        onClick={() => handleStateEmployee(employee)}
                       >
                         <UserX className="action-icon" />
                       </button>
@@ -291,7 +293,7 @@ export default function Empleados() {
                     <Tooltip content="Dar de alta empleado" position="top">
                       <button
                         className="action-icon-button activate-action"
-                        onClick={() => alert('Funcionalidad de alta no implementada')}
+                        onClick={() => handleStateEmployee(employee)}
                       >
                         <UserCheck className="action-icon" />
                       </button>

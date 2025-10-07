@@ -41,7 +41,7 @@ export function EmployeeViewModal({ isOpen, onClose, employee, onLiquidarSueldo,
             </div>
             <div className={'detail-item'}>
               <div className={'detail-label'}>Dirección</div>
-              <div className={'detail-value'}>{employee.domicilio || 'S/N'}</div>
+              <div className={'detail-value'}>{`${employee.domicilio}` || 'S/N'}</div>
             </div>
           </div>
         </div>
