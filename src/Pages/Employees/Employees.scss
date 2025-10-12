@@ -45,7 +45,12 @@
       }
     }
   }
-
+  .button-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; // o 8px (controla la separación)
+}
+ 
   .stats-overview {
     display: grid;
     grid-template-columns: repeat(1, minmax(0, 1fr));

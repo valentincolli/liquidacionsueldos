@@ -230,6 +230,7 @@ export default function Empleados() {
             Administra la información y datos de todos los empleados
           </p>
         </div>
+        <div className='button-group'>
         <button className="add-employee-btn" >
           <FileText className="btn-icon" />
           Exportar Lista
@@ -238,6 +239,7 @@ export default function Empleados() {
           <Plus className="btn-icon" />
           Nuevo Empleado
         </button>
+        </div>
       </div>
 
       {/* Stats Summary */}

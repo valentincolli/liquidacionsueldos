@@ -1,3 +1,4 @@
+import html2pdf from 'html2pdf.js';
 import React, { useState } from 'react';
 import { Modal, ModalFooter } from '../Modal/Modal';
 import { Search, Users, DollarSign, Download, Printer, Plus, X, Edit, CheckCircle, AlertCircle, User, Calendar, Badge, Clock, Star } from 'lucide-react';
@@ -161,12 +162,68 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess }) {
   };
 
   // Descargar recibo
-  const handleDownload = () => {
-    const link = document.createElement('a');
-    link.href = 'data:text/plain;charset=utf-8,Recibo de Sueldo - ' + selectedEmployee?.name;
-    link.download = `recibo_${selectedEmployee?.legajo}_${payrollData.period}.txt`;
-    link.click();
-  };
+// arriba del archivo
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+
+// 👇 helper para abrir el recibo con los mismos estilos
+const openReceiptWindow = (autoPrint = false) => {
+  const recibo = document.getElementById('recibo');
+  if (!recibo) return;
+
+  const fileName =
+    `Recibo_${selectedEmployee?.legajo || selectedEmployee?.name || 'empleado'}_${
+      (payrollData?.periodDisplay || '').replace(/\s+/g, '_')
+    }`;
+
+  // Copiamos <link rel="stylesheet"> y <style> de tu app
+  const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
+    .map(el => el.outerHTML)
+    .join('\n');
+
+  const html = `
+    <!doctype html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <title>${fileName}</title>
+        ${styles}
+        <style>
+          @page { size: A4; margin: 12mm; }
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          /* desactivar animaciones/transform que a veces rompen el render */
+          * { animation: none !important; transform: none !important; }
+          /* ocultar elementos de UI si llegaran a colarse */
+          .ModalFooter, .btn, .receipt-stamp { display: none !important; }
+        </style>
+      </head>
+      <body class="process-payroll-modal">
+        <div class="receipt-preview">
+          ${recibo.outerHTML}
+        </div>
+        <script>
+          ${autoPrint ? "window.onload = () => setTimeout(() => window.print(), 150);" : ""}
+        <\/script>
+      </body>
+    </html>
+  `;
+
+  const win = window.open('', '_blank');
+  if (!win) return;
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+};
+
+// 👇 Ver en una pestaña nueva (mismos estilos, sin abrir el diálogo)
+const handleView = () => openReceiptWindow(false);
+
+// 👇 Descargar (abre el diálogo del navegador para Guardar como PDF)
+const handleDownload = () => openReceiptWindow(true);
+
+
+
+
 
   // Resetear modal
   const resetModal = () => {
@@ -453,7 +510,7 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess }) {
             </div>
           </div>
 
-          <div className="receipt-container">
+          <div className="receipt-container" id="recibo">
             <div className="receipt-stamp">
               <CheckCircle className="stamp-icon" />
               <span>RECIBO GENERADO</span>
@@ -503,6 +560,7 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess }) {
 
             <div className="receipt-concepts">
               <div className="concepts-header">
+                <span>CÓDIGO</span>
                 <span>CONCEPTO</span>
                 <span>UNIDADES</span>
                 <span>REMUNERACIONES</span>

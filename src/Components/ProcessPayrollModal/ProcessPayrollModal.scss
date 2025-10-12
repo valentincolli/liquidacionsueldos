@@ -880,6 +880,8 @@
     }
   }
 
+  
+
   // Responsive Design
   @media (max-width: 768px) {
     .payroll-form {
@@ -919,20 +921,72 @@
       }
     }
   }
+}
+/* ==== PRINT: solo imprimir #recibo ==== */
+@media print {
+  /* Ocultar todo por defecto */
+  body * {
+    visibility: hidden !important;
+  }
 
-  // Print Styles
-  @media print {
-    .receipt-preview {
-      .receipt-container {
-        border: none;
-        box-shadow: none;
-        max-width: none;
-        margin: 0;
-        padding: 20px;
-      }
-    }
+  /* Mostrar solo el recibo */
+  #recibo,
+  #recibo * {
+    visibility: visible !important;
+    page-break-inside: avoid;
+  }
+
+  /* Llevar el recibo al inicio y ocupar el ancho */
+  #recibo {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 20px !important;
+    background: #fff !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+  .receipt-container,
+  .receipt-preview,
+  .modal,
+  body {
+    transform: none !important;
+    animation: none !important;
+  }
+
+  /* Evitar límites de alto/scroll de modales */
+  .modal, .modal-dialog, .modal-content {
+    position: static !important;
+    max-height: none !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+  }
+
+  /* Opcional: oculta UI */
+  .no-print,
+  .section-header-enhanced,
+  .ModalFooter,
+  .receipt-stamp,
+  .btn { display: none !important; }
+
+  /* Página y colores */
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }
+
 
 // Animations
 @keyframes pulse {
@@ -995,3 +1049,25 @@
 .receipt-container {
   animation: slideInRight 0.4s ease-out;
 }
+
+/* Modo PDF: ocultá lo de UI y liberá el recibo */
+body.pdf-mode .no-print,
+body.pdf-mode .section-header-enhanced,
+body.pdf-mode .ModalFooter,
+body.pdf-mode .receipt-stamp { display: none !important; }
+
+body.pdf-mode #recibo {
+  border: none !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 20px !important;
+  width: auto !important;
+  max-width: none !important;
+  background: #fff !important;
+}
+
+/* Evitar cortes en filas/boxes importantes */
+#recibo, #recibo * { break-inside: avoid; page-break-inside: avoid; }
+
+/* Por si animaciones/transform rompen el render del PDF */
+body.pdf-mode * { animation: none !important; transform: none !important; }
