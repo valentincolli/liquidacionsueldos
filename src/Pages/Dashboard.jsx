@@ -1,35 +1,55 @@
+import React, { useEffect, useState } from 'react';
 import { Users, FileText, Calculator, TrendingUp, DollarSign, Clock } from 'lucide-react';
 import '../styles/components/_dashboard.scss';
+import * as api from '../services/empleadosAPI'
 
 export default function Dashboard() {
+  const [activeEmployees, setActiveEmployees] = useState();
+  const [gremiosCount, setGremiosCount] = useState();
+
+  useEffect(() => {
+    countActiveEmployees();
+    countGremios();
+  }, []);
+
+  const countActiveEmployees = async () => {
+    try {
+      const count = await api.getCountActiveEmployees();
+      setActiveEmployees(count);
+    } catch (error) {
+      console.error('Error al obtener el conteo de empleados activos:', error);
+    }
+  };
+
+  const countGremios = async () => {
+    try {
+      const count = await api.countConvenios();
+      setGremiosCount(count);
+    } catch (error) {
+      console.error('Error al obtener el conteo de gremios:', error);
+    }
+  };
+
   const stats = [
     {
-      title: 'Total Empleados',
-      value: '124',
-      change: '+12%',
+      title: 'Total Empleados Activos',
+      value: activeEmployees || 'Cargando...',
       icon: Users,
-      trend: 'up'
     },
     {
       title: 'Liquidaciones Pendientes',
       value: '8',
-      change: '-3',
       icon: Clock,
-      trend: 'down'
     },
     {
       title: 'Monto Total Mensual',
       value: '$2,847,500',
-      change: '+8.2%',
       icon: DollarSign,
-      trend: 'up'
     },
     {
       title: 'Convenios Activos',
-      value: '15',
-      change: '+2',
+      value: gremiosCount || 'Cargando...',
       icon: FileText,
-      trend: 'up'
     }
   ];
 
@@ -90,9 +110,6 @@ export default function Dashboard() {
               </div>
               <div className="stat-content">
                 <div className="stat-value">{stat.value}</div>
-                <p className={`stat-change ${stat.trend === 'up' ? 'positive' : 'negative'}`}>
-                  {stat.change} desde el mes pasado
-                </p>
               </div>
             </div>
           );

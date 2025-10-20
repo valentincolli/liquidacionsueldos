@@ -15,6 +15,9 @@ export const updateStateEmployee = (legajo) =>
 export const getEmpleadoByLegajo = (legajo) =>
     axiosClient.get(`/empleados/${legajo}`).then((r)=>r.data);
 
+export const getCountActiveEmployees = () =>
+    axiosClient.get(`/empleados/count/activos`).then((r)=>r.data);
+
 export const getCategoriaById = (id) =>
     axiosClient.get(`/categorias/${id}`).then((r)=>r.data);
 
@@ -42,6 +45,9 @@ export const getDetallePago = (idPago) =>
 export const getConvenios = () =>
     axiosClient.get(`/convenios`).then((r)=>r.data);
 
+export const countConvenios = () =>
+    axiosClient.get(`/convenios/count`).then((r)=>r.data);
+
 export const getConveniosNombre = (controller) =>
     axiosClient.get(`/convenios/${controller}`).then((r)=>r.data);
 
@@ -53,3 +59,6 @@ export const updateBasicoUocra = (lista) =>
 
 export const getAreas = () =>
     axiosClient.get(`/areas`).then((r)=>r.data);
+
+export const getZonas = () =>
+    axiosClient.get(`/zonas`).then((r)=>r.data);

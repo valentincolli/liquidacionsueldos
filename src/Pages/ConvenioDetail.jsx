@@ -329,19 +329,6 @@ export default function ConvenioDetail() {
         </div>
       </div>
 
-      {/* Información General */}
-      <div className="general-info card">
-        <div className="info-row">
-          <div><strong>Convenio:</strong> {currentData.name}</div>
-          <div><strong>Categorías:</strong> {currentData.categoriesCount ?? '—'}</div>
-        </div>
-        {currentData.description && (
-          <div className="info-row">
-            <div><strong>Descripción:</strong> {currentData.description}</div>
-          </div>
-        )}
-      </div>
-
       {/* Tabla salarial (solo si existe) */}
       <div className="salary-table-container">
       {controller === 'lyf' && (

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Modal, ModalFooter } from '../Modal/Modal';
 import { Search, Users, DollarSign, Download, Printer, Plus, X, Edit, CheckCircle, AlertCircle, User, Calendar, Badge, Clock, Star } from 'lucide-react';
+import './ProcessPayrollModal.scss';
+import * as api from '../../services/empleadosAPI'
 
 // Mock data de empleados
 const employeesData = [
@@ -57,6 +59,7 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess }) {
   const [payrollData, setPayrollData] = useState({});
   const [concepts, setConcepts] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [employeeList, setEmployeeList] = useState(employeesData);
 
   // Filtrar empleados por búsqueda
   const filteredEmployees = employeesData.filter(employee =>

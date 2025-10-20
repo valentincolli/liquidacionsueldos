@@ -14,7 +14,6 @@ export default function Empleados() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
-  const [current, setCurrent] = useState(null);
   const [search, setSearch] = useState("");
   const [filtered, setFiltered] = useState([]);
   const [employeeList, setEmployeeList] = useState(employees);
@@ -38,7 +37,8 @@ export default function Empleados() {
         setLoading(true);
         const data = await api.getEmployees();
         const norm = normalizeEmployees(data);
-        setEmployees(norm);
+        const ordenados = norm.sort((a, b) => a.legajo - b.legajo);
+        setEmployees(ordenados);
         setError("");
     } catch (err) {
         setError(err.message);
@@ -124,7 +124,6 @@ export default function Empleados() {
             api.updateStateEmployee(employee.legajo);
             window.showNotification?.(`Empleado ${employee.nombre} ${employee.apellido} dado de baja`, 'info');
           }
-          console.log('Empleado dado de baja:', employee.name);
     }
     loadEmployees();
   }
@@ -240,7 +239,9 @@ export default function Empleados() {
                   </div>
                   <div className="employee-salary">
                     <p className="salary-amount">
-                      ${employee.legajo}
+                      {Array.isArray(employee.nombreAreas)
+                        ? employee.nombreAreas.join(", ")
+                        : employee.nombreAreas || "-"}
                     </p>
                     <p className="hire-date">Ingreso: {employee.inicioActividad}</p>
                   </div>
