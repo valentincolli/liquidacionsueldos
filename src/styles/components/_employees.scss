@@ -90,6 +90,8 @@
 
   .filters-card {
     margin-bottom: $spacing-6;
+    overflow: visible;
+    position: relative;
 
     .filters-content {
       padding: $spacing-4;
@@ -123,6 +125,7 @@
       .filter-controls {
         display: flex;
         gap: $spacing-2;
+        position: relative;
 
         .department-select {
           padding: $spacing-2 $spacing-3;
@@ -142,15 +145,161 @@
           display: flex;
           align-items: center;
           gap: $spacing-2;
-          transition: background-color 0.15s ease;
+          transition: all 0.15s ease;
+          position: relative;
 
           &:hover {
             background-color: $color-gray-100;
           }
 
+          &.active {
+            background-color: $color-green-primary;
+            border-color: $color-green-primary;
+            color: $color-white;
+
+            &:hover {
+              background-color: $color-green-dark;
+            }
+          }
+
           .filter-icon {
             width: 1rem;
             height: 1rem;
+          }
+
+          .filter-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 1.25rem;
+            height: 1.25rem;
+            padding: 0 0.375rem;
+            background-color: rgba(239, 68, 68, 0.9);
+            color: $color-white;
+            border-radius: 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: $spacing-1;
+          }
+        }
+
+        .filter-dropdown {
+          position: absolute;
+          top: calc(100% + $spacing-2);
+          right: 0;
+          background-color: $color-white;
+          border: 1px solid $color-gray-300;
+          border-radius: $border-radius-lg;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+          min-width: 280px;
+          z-index: 1000;
+          padding: $spacing-4;
+
+          .filter-dropdown-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: $spacing-4;
+            padding-bottom: $spacing-3;
+            border-bottom: 1px solid $color-gray-200;
+
+            h3 {
+              font-size: $font-size-lg;
+              font-weight: 600;
+              color: $color-gray-900;
+              margin: 0;
+            }
+
+            .close-dropdown-btn {
+              background: transparent;
+              border: none;
+              cursor: pointer;
+              color: $color-gray-500;
+              padding: $spacing-1;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border-radius: $border-radius;
+              transition: background-color 0.15s ease;
+
+              &:hover {
+                background-color: $color-gray-100;
+                color: $color-gray-700;
+              }
+            }
+          }
+
+          .filter-group {
+            margin-bottom: $spacing-4;
+
+            &:last-of-type {
+              margin-bottom: 0;
+            }
+
+            .filter-label {
+              display: block;
+              font-size: $font-size-sm;
+              font-weight: 600;
+              color: $color-gray-700;
+              margin-bottom: $spacing-2;
+            }
+
+            .filter-options {
+              display: flex;
+              flex-direction: column;
+              gap: $spacing-1;
+
+              .filter-option {
+                padding: $spacing-2 $spacing-3;
+                border: 1px solid $color-gray-300;
+                background-color: $color-white;
+                color: $color-gray-700;
+                border-radius: $border-radius;
+                cursor: pointer;
+                text-align: left;
+                transition: all 0.15s ease;
+                font-size: $font-size-sm;
+
+                &:hover {
+                  background-color: $color-gray-50;
+                  border-color: $color-gray-400;
+                }
+
+                &.active {
+                  background-color: $color-green-primary;
+                  border-color: $color-green-primary;
+                  color: $color-white;
+
+                  &:hover {
+                    background-color: $color-green-dark;
+                  }
+                }
+              }
+            }
+          }
+
+          .filter-actions {
+            margin-top: $spacing-4;
+            padding-top: $spacing-3;
+            border-top: 1px solid $color-gray-200;
+
+            .clear-filters-btn {
+              width: 100%;
+              padding: $spacing-2 $spacing-3;
+              border: 1px solid $color-gray-300;
+              background-color: $color-white;
+              color: $color-gray-700;
+              border-radius: $border-radius;
+              cursor: pointer;
+              font-size: $font-size-sm;
+              font-weight: 500;
+              transition: all 0.15s ease;
+
+              &:hover {
+                background-color: $color-gray-100;
+                border-color: $color-gray-400;
+              }
+            }
           }
         }
       }

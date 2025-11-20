@@ -4,7 +4,7 @@ import { Search, Users, Download, Printer, Plus, X, CheckCircle, User, Calendar,
 import './ProcessPayrollModal.scss';
 import * as api from '../../services/empleadosAPI'
 
-export function ProcessPayrollModal({ isOpen, onClose, onProcess, employees }) {
+export function ProcessPayrollModal({ isOpen, onClose, onProcess, employees, initialEmployee = null }) {
   const [currentStep, setCurrentStep] = useState('search');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState(null);
@@ -17,6 +17,17 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess, employees }) {
   const [periodo, setPeriodo] = useState(
     new Date().toISOString().slice(0,7)
   );
+  const [basicSalary, setBasicSalary] = useState(0);
+
+  // Función para formatear el nombre del gremio
+  const formatGremioNombre = (gremioNombre) => {
+    if (!gremioNombre) return '';
+    const upper = gremioNombre.toUpperCase();
+    if (upper === 'LUZ_Y_FUERZA' || upper.includes('LUZ') && upper.includes('FUERZA')) {
+      return 'Luz y Fuerza';
+    }
+    return gremioNombre;
+  };
 
   const calcTotal = (lista) =>
     lista.reduce(
@@ -27,71 +38,99 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess, employees }) {
   // Seleccionar empleado
   const handleSelectEmployee = async (employee) => {
     setSelectedEmployee(employee);
-    setConceptos([]); // limpiamos la tabla anterior
+    setConceptos([]); // Limpiamos la tabla anterior
 
     try {
-      const categoria = await api.getCategoriaById(employee.idCategoria);
-      const basico = {
-        id: employee.idCategoria,
-        tipo: 'CATEGORIA', 
-        nombre: 'Básico',
-        montoUnitario: categoria.basico,
-        cantidad: 1,
-        total: categoria.basico ?? 0,
-      };
-      /*Boinificación área*/
-      const areas = (employee.idAreas || []).map((id, index) => ({
-        idArea: id,
-        nombre: employee.nombreAreas?.[index] ?? 'Área'
-      }));
-      const categoria_11 = await api.getCategoriaById(11);
-      const bonosDeAreas = await Promise.all(
-        areas.map(async (area)=>{
-          const porcentaje = await api.getPorcentajeArea(area.idArea, employee.idCategoria);
-          const bonoImporte = (categoria_11.basico * Number(porcentaje))/100;
-          return {
-            id: area.idArea,
-            tipo: 'BONIFICACION_VARIABLE',
-            nombre: `${area.nombre}`,
-            montoUnitario: bonoImporte,
-            cantidad: 1,
-            total: bonoImporte ?? 0,
-          };
-        })
-      );
+      const gremio = employee.gremio?.nombre?.toUpperCase() ?? '';
+      let basicoValue = 0;
+      let basico = null;
 
-      /*Conceptos precargados en base de datos*/
+      if (gremio.includes('UOCRA')) {
+        // 🔸 Obtener básico por categoría y zona
+        const categoriaZona = await api.getBasicoByCatAndZona(employee.idCategoria, employee.idZona);
+        basicoValue = categoriaZona.basico;
+        setBasicSalary(basicoValue);
+        basico = {
+          id: categoriaZona.id,
+          tipo: 'CATEGORIA_ZONA',
+          nombre: `Básico - ${categoriaZona.zona}`,
+          montoUnitario: basicoValue,
+          cantidad: 1,
+          total: basicoValue ?? 0,
+        };
+      } else {
+        // 🔸 Luz y Fuerza (básico por categoría)
+        const categoria = await api.getCategoriaById(employee.idCategoria);
+        basicoValue = categoria.basico;
+        setBasicSalary(basicoValue);
+        basico = {
+          id: employee.idCategoria,
+          tipo: 'CATEGORIA',
+          nombre: `Básico - ${categoria.nombre}`,
+          montoUnitario: basicoValue,
+          cantidad: 1,
+          total: basicoValue ?? 0,
+        };
+      }
+
+      /* Bonificaciones de área (solo para Luz y Fuerza) */
+      let bonosDeAreas = [];
+      if (gremio.includes('LUZ')) {
+        const areas = (employee.idAreas || []).map((id, index) => ({
+          idArea: id,
+          nombre: employee.nombreAreas?.[index] ?? 'Área',
+        }));
+
+        const categoria_11 = await api.getCategoriaById(11);
+        bonosDeAreas = await Promise.all(
+          areas.map(async (area) => {
+            const porcentaje = await api.getPorcentajeArea(area.idArea, employee.idCategoria);
+            const bonoImporte = (categoria_11.basico * Number(porcentaje)) / 100;
+            return {
+              id: area.idArea,
+              tipo: 'BONIFICACION_VARIABLE',
+              nombre: `${area.nombre}`,
+              montoUnitario: bonoImporte,
+              cantidad: 1,
+              total: bonoImporte ?? 0,
+            };
+          })
+        );
+      }
+
+      /* Conceptos precargados en base de datos */
       const conceptosAsignados = await api.getConceptosAsignados(employee.legajo);
       const bonificacionesFijas = await api.getConceptos();
       const descuentos = await api.getDescuentos();
 
-      const mappedAsignados = conceptosAsignados.map((asignado)=>{
-        let concepto = null;
+      const mappedAsignados = conceptosAsignados
+        .map((asignado) => {
+          let concepto = null;
 
-        if(asignado.tipoConcepto === 'BONIFICACION_FIJA'){
-          concepto = bonificacionesFijas.find(b=>b.id === asignado.idReferencia);
-        } else if(asignado.tipoConcepto === 'DESCUENTO'){
-          concepto = descuentos.find(d=>d.idDescuento === asignado.idReferencia);
-        }
-          
-        if(!concepto) return null;
+          if (asignado.tipoConcepto === 'BONIFICACION_FIJA') {
+            concepto = bonificacionesFijas.find(b => b.id === asignado.idReferencia);
+          } else if (asignado.tipoConcepto === 'DESCUENTO') {
+            concepto = descuentos.find(d => d.idDescuento === asignado.idReferencia);
+          }
 
-        const tipo = asignado.tipoConcepto === 'DESCUENTO'
-          ? 'DESCUENTO'
-          : 'BONIFICACION_FIJA';
-        const signo = asignado.tipoConcepto === 'DESCUENTO' ? -1 : 1;
-        const montoUnitario = (categoria_11.basico * concepto.porcentaje) / 100 * signo;
-        
-        return{
-          id: asignado.idReferencia,
-          tipo,
-          nombre: concepto.nombre,
-          montoUnitario,
-          cantidad: asignado.unidades,
-          total: montoUnitario * asignado.unidades,
-        };
-      }).filter(Boolean);
-      /*Agregar conceptos y total*/
+          if (!concepto) return null;
+
+          const tipo = asignado.tipoConcepto === 'DESCUENTO' ? 'DESCUENTO' : 'BONIFICACION_FIJA';
+          const signo = tipo === 'DESCUENTO' ? -1 : 1;
+          const montoUnitario = (basicoValue * concepto.porcentaje / 100) * signo;
+
+          return {
+            id: asignado.idReferencia,
+            tipo,
+            nombre: concepto.nombre,
+            montoUnitario,
+            cantidad: asignado.unidades,
+            total: montoUnitario * asignado.unidades,
+          };
+        })
+        .filter(Boolean);
+
+      /* Lista final de conceptos */
       const lista = [basico, ...bonosDeAreas, ...mappedAsignados];
 
       setTotal(calcTotal(lista));
@@ -102,6 +141,25 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess, employees }) {
       alert('No se pudo obtener el sueldo básico del empleado.');
     }
   };
+
+  // Seleccionar empleado inicial cuando el modal se abre con un empleado preseleccionado
+  useEffect(() => {
+    if (isOpen && initialEmployee) {
+      // Solo seleccionar si el empleado inicial es diferente al seleccionado actualmente
+      if (!selectedEmployee || selectedEmployee.legajo !== initialEmployee.legajo) {
+        handleSelectEmployee(initialEmployee);
+      }
+    } else if (!isOpen) {
+      // Reset cuando el modal se cierra
+      setCurrentStep('search');
+      setSearchTerm('');
+      setSelectedEmployee(null);
+      setConceptos([]);
+      setTotal(0);
+      setBasicSalary(0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, initialEmployee]);
 
   // Actualizar cantidad de un concepto
   const handleQtyChange = (index, nuevaCantidad) => {
@@ -287,7 +345,7 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess, employees }) {
                           <div className="employee-badges">
                             <span className="badge legajo-badge">#{employee.legajo}</span>
                             <span className="badge category-badge">{employee.categoria}</span>
-                            <span className="badge convenio-badge">{employee.gremio.nombre}</span>
+                            <span className="badge convenio-badge">{formatGremioNombre(employee.gremio.nombre)}</span>
                           </div>
                           <p className="employee-meta">
                             <Clock className="meta-icon" />
@@ -297,7 +355,9 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess, employees }) {
                       </div>
                       <div className="employee-salary">
                         <span className="salary-label">Sueldo Básico:</span>
-                        <div className="salary-indicator"></div>
+                        <span className="salary-value">
+                          ${(employee.salary || employee.sueldoBasico || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -339,8 +399,14 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess, employees }) {
                 <div className="summary-badges">
                   <span className="badge">#{selectedEmployee.legajo}</span>
                   <span className="badge">{selectedEmployee.categoria}</span>
-                  <span className="badge">{selectedEmployee.gremio.nombre}</span>
+                  <span className="badge">{formatGremioNombre(selectedEmployee.gremio.nombre)}</span>
                 </div>
+                {basicSalary > 0 && (
+                  <div className="salary-info" style={{ marginTop: '8px', fontSize: '0.9rem', color: '#666' }}>
+                    <span>Sueldo Básico: </span>
+                    <strong>${basicSalary.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                  </div>
+                )}
               </div>
             </div>
             <div className="period-info">

@@ -1,7 +1,140 @@
+import { useState, useEffect } from 'react';
 import { Modal, ModalFooter } from '../Modal/Modal';
-import { User, Mail, Phone, MapPin, Calendar, DollarSign, Building, FileText } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Calendar, DollarSign, Building, FileText, ListChecks } from 'lucide-react';
+import * as api from "../../services/empleadosAPI";
+
+// Función helper para formatear moneda en formato argentino ($100.000,00)
+const formatCurrencyAR = (value) => {
+  if (value === null || value === undefined || isNaN(value)) return '$0,00';
+  const numValue = Number(value);
+  const absValue = Math.abs(numValue);
+  const parts = absValue.toFixed(2).split('.');
+  const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return `$${integerPart},${parts[1]}`;
+};
 
 export function EmployeeViewModal({ isOpen, onClose, employee, onLiquidarSueldo, onHistorialLiquidaciones }) {
+  const [conceptosAsignados, setConceptosAsignados] = useState([]);
+  const [loadingConceptos, setLoadingConceptos] = useState(false);
+  const [areas, setAreas] = useState([]);
+  const [categoriaBasico, setCategoriaBasico] = useState(0);
+
+  useEffect(() => {
+    const loadConceptosAsignados = async () => {
+      if (!employee || !isOpen) return;
+
+      setLoadingConceptos(true);
+      try {
+        // Cargar conceptos asignados del empleado
+        const asignados = await api.getConceptosAsignados(employee.legajo);
+        
+        // Cargar catálogos necesarios
+        const bonificacionesFijas = await api.getConceptos();
+        const descuentos = await api.getDescuentos();
+        const areasData = await api.getAreas();
+        setAreas(areasData);
+
+        // Obtener el básico de categoría 11 para cálculos
+        let basicoCat11 = categoriaBasico;
+        if (basicoCat11 === 0) {
+          try {
+            const cat11 = await api.getCategoriaById(11);
+            basicoCat11 = cat11?.basico ?? cat11?.salarioBasico ?? cat11?.sueldoBasico ?? cat11?.monto ?? cat11?.salario ?? 0;
+            setCategoriaBasico(Number(basicoCat11) || 0);
+          } catch (error) {
+            console.error('Error al obtener categoría 11:', error);
+          }
+        }
+
+        // Mapear los conceptos asignados
+        const mappedConceptos = await Promise.all(
+          asignados.map(async (asignado) => {
+            let concepto = null;
+            let area = null;
+            let nombre = '';
+            let porcentaje = null;
+            let unidades = asignado.unidades || 1;
+            let tipoConcepto = asignado.tipoConcepto;
+            let isDescuento = false;
+
+            if (asignado.tipoConcepto === 'BONIFICACION_FIJA') {
+              concepto = bonificacionesFijas.find(b => 
+                (b.idBonificacion ?? b.id) === asignado.idReferencia
+              );
+              if (concepto) {
+                nombre = concepto.nombre ?? concepto.descripcion ?? '';
+                porcentaje = concepto.porcentaje ?? null;
+              }
+            } else if (asignado.tipoConcepto === 'DESCUENTO') {
+              concepto = descuentos.find(d => 
+                (d.idDescuento ?? d.id) === asignado.idReferencia
+              );
+              if (concepto) {
+                nombre = concepto.nombre ?? concepto.descripcion ?? '';
+                porcentaje = concepto.porcentaje ?? null;
+                isDescuento = true;
+              }
+            } else if (asignado.tipoConcepto === 'BONIFICACION_VARIABLE') {
+              // Buscar el área
+              area = areasData.find(a => a.idArea === asignado.idReferencia);
+              if (area) {
+                nombre = area.nombre || `Área ${asignado.idReferencia}`;
+                // Obtener porcentaje de área
+                try {
+                  const porcentajeResponse = await api.getPorcentajeArea(asignado.idReferencia, 11);
+                  porcentaje = typeof porcentajeResponse === 'number' 
+                    ? porcentajeResponse 
+                    : Number(porcentajeResponse?.porcentaje ?? porcentajeResponse) || 0;
+                } catch (error) {
+                  console.error(`Error al obtener porcentaje para área ${asignado.idReferencia}:`, error);
+                  porcentaje = 0;
+                }
+              }
+            } else if (asignado.tipoConcepto === 'CATEGORIA_ZONA') {
+              // Para UOCRA - categoría zona
+              nombre = `Categoría-Zona ${asignado.idReferencia}`;
+              porcentaje = null;
+            }
+
+            if (!nombre && !concepto && !area) return null;
+
+            // Calcular total si hay porcentaje y básico
+            let total = 0;
+            if (porcentaje && basicoCat11 > 0) {
+              const montoUnitario = (basicoCat11 * porcentaje) / 100;
+              total = isDescuento ? -(montoUnitario * unidades) : (montoUnitario * unidades);
+            }
+
+            return {
+              id: asignado.idEmpleadoConcepto || asignado.idReferencia,
+              tipoConcepto: tipoConcepto,
+              nombre: nombre || 'Concepto desconocido',
+              porcentaje: porcentaje,
+              unidades: unidades,
+              total: total,
+              idReferencia: asignado.idReferencia,
+              isDescuento: isDescuento
+            };
+          })
+        );
+
+        // Filtrar nulls y establecer
+        setConceptosAsignados(mappedConceptos.filter(Boolean));
+      } catch (error) {
+        console.error('Error al cargar conceptos asignados:', error);
+        setConceptosAsignados([]);
+      } finally {
+        setLoadingConceptos(false);
+      }
+    };
+
+    if (isOpen && employee) {
+      loadConceptosAsignados();
+    } else {
+      setConceptosAsignados([]);
+    }
+  }, [isOpen, employee]);
+
   if (!employee) return null;
 
   const getStatusClass = (status) => {
@@ -20,7 +153,7 @@ export function EmployeeViewModal({ isOpen, onClose, employee, onLiquidarSueldo,
       isOpen={isOpen}
       onClose={onClose}
       title={`Detalles del Empleado - ${employee.nombre} ${employee.apellido}`}
-      size="large"
+      size="medium"
       className={'employee-view-modal'}
     >
       <div className={'employee-details'}>
@@ -85,6 +218,76 @@ export function EmployeeViewModal({ isOpen, onClose, employee, onLiquidarSueldo,
             </div>
           </div>
         </div>
+
+        {/* Conceptos Asignados */}
+        {employee.gremioNombre && employee.gremioNombre !== "Convenio General" && (
+          <div className="form-section conceptos-section">
+            <h3 className="section-title">
+              <ListChecks className="title-icon" />
+              Conceptos Asignados
+            </h3>
+            {loadingConceptos ? (
+              <p className="conceptos-empty-message">Cargando conceptos...</p>
+            ) : conceptosAsignados.length === 0 ? (
+              <p className="conceptos-empty-message">
+                No hay conceptos asignados a este empleado
+              </p>
+            ) : (
+              <div className="conceptos-table">
+                <table className="conceptos-table-content">
+                  <thead>
+                    <tr>
+                      <th>Tipo</th>
+                      <th>Concepto</th>
+                      <th>Porcentaje</th>
+                      <th>Unidades</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {conceptosAsignados.map((concepto) => {
+                      const isDescuento = concepto.tipoConcepto === 'DESCUENTO' || concepto.isDescuento;
+                      return (
+                        <tr key={concepto.id} className={`selected ${isDescuento ? 'descuento-row' : ''}`}>
+                          <td>
+                            <span className="concepto-label">
+                              {concepto.tipoConcepto === 'BONIFICACION_FIJA' 
+                                ? 'Bonificación Fija'
+                                : concepto.tipoConcepto === 'BONIFICACION_VARIABLE'
+                                ? 'Bonificación Variable'
+                                : concepto.tipoConcepto === 'CATEGORIA_ZONA'
+                                ? 'Categoría-Zona'
+                                : concepto.tipoConcepto === 'DESCUENTO'
+                                ? 'Descuento'
+                                : concepto.tipoConcepto}
+                            </span>
+                          </td>
+                          <td>
+                            <span className="concepto-label">
+                              {concepto.nombre}
+                            </span>
+                          </td>
+                          <td className="porcentaje-cell">
+                            {concepto.porcentaje ? `${concepto.porcentaje}%` : '-'}
+                          </td>
+                          <td>
+                            {concepto.unidades || '-'}
+                          </td>
+                          <td className={`total-cell ${isDescuento ? 'descuento-total' : ''}`}>
+                            {concepto.total && concepto.total !== 0
+                              ? formatCurrencyAR(concepto.total)
+                              : '-'
+                            }
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Botones de Acción */}
         <div className={'action-buttons'}>

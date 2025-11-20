@@ -151,23 +151,229 @@
     }
   }
   
-  @media (max-width: 1024px) {
-    .main-content {
-      grid-template-columns: 1fr;
+  .main-content {
+    width: 100%;
+    max-width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $spacing-6;
+
+    @media (min-width: 1024px) {
+      grid-template-columns: 2fr 1fr;
     }
   }
-  .payroll-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-    gap: $spacing-4;
 
-    .payroll-card {
-      border: 1px solid $color-gray-200;
-      border-radius: $border-radius-lg;
-      padding: $spacing-4;
-      background: $color-white;
-      transition: all 0.15s ease;
-      cursor: pointer;
+  .employees-list {
+    width: 100%;
+    max-width: 100%;
+
+    .list-header {
+      .list-title {
+        font-size: $font-size-lg;
+        font-weight: 600;
+        color: $color-gray-900;
+        margin-bottom: $spacing-1;
+      }
+
+      .list-description {
+        font-size: $font-size-sm;
+        color: $color-gray-500;
+      }
+    }
+
+    .list-content {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: visible;
+
+      .employee-list {
+        display: flex;
+        flex-direction: column;
+        gap: $spacing-4;
+        width: 100%;
+
+        .employee-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: $spacing-4;
+          border: 1px solid $color-gray-200;
+          border-radius: $border-radius-lg;
+          transition: background-color 0.15s ease;
+          width: 100%;
+          max-width: 100%;
+          box-sizing: border-box;
+
+          &:hover {
+            background-color: rgba(243, 244, 246, 0.5);
+          }
+
+          .employee-grid {
+            flex: 1 1 auto;
+            display: grid;
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+            gap: $spacing-4;
+            align-items: center;
+            min-width: 0;
+            width: 100%;
+
+            @media (min-width: 768px) {
+              grid-template-columns: 2.5fr 2fr 1.5fr 1fr;
+              gap: $spacing-6;
+            }
+
+            .employee-info {
+              min-width: 0;
+
+              .employee-name {
+                font-weight: 600;
+                color: $color-gray-900;
+                margin-bottom: $spacing-1;
+                word-wrap: break-word;
+              }
+
+              .employee-email {
+                font-size: $font-size-sm;
+                color: $color-gray-500;
+              }
+            }
+
+            .employee-position {
+              min-width: 0;
+
+              .position-title {
+                font-weight: 500;
+                margin-bottom: $spacing-1;
+                word-wrap: break-word;
+              }
+
+              .department {
+                font-size: $font-size-sm;
+                color: $color-gray-500;
+              }
+            }
+
+            .employee-salary {
+              min-width: 0;
+
+              .salary-amount {
+                font-weight: 600;
+                color: $color-success;
+                margin-bottom: $spacing-1;
+                white-space: nowrap;
+              }
+
+              .hire-date {
+                font-size: $font-size-sm;
+                color: $color-gray-500;
+              }
+            }
+
+            .employee-status {
+              display: flex;
+              align-items: center;
+              justify-content: flex-start;
+              min-width: fit-content;
+
+              .status-badge {
+                display: inline-flex;
+                align-items: center;
+                padding: $spacing-1 $spacing-2;
+                border-radius: $border-radius-sm;
+                font-size: $font-size-xs;
+                font-weight: 500;
+                white-space: nowrap;
+
+                &.active {
+                  background-color: rgba(34, 197, 94, 0.1);
+                  color: $color-green-dark;
+                }
+
+                &.inactive {
+                  background-color: rgba(239, 68, 68, 0.1);
+                  color: #dc2626;
+                }
+
+                &.completada, &.completado {
+                  background-color: rgba(34, 197, 94, 0.1);
+                  color: $color-green-dark;
+                }
+
+                &.pendiente {
+                  background-color: rgba(234, 179, 8, 0.1);
+                  color: $color-yellow-dark;
+                }
+
+                &.cancelada, &.cancelado {
+                  background-color: rgba(239, 68, 68, 0.1);
+                  color: #dc2626;
+                }
+              }
+            }
+          }
+
+          .employee-actions {
+            display: flex;
+            gap: $spacing-1;
+            margin-left: $spacing-2;
+
+            .action-icon-button {
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              width: 2rem;
+              height: 2rem;
+              border: none;
+              border-radius: $border-radius;
+              background: transparent;
+              cursor: pointer;
+              transition: all 0.15s ease;
+              color: $color-gray-500;
+
+              &:hover {
+                background-color: $color-gray-100;
+                color: $color-gray-700;
+                transform: scale(1.1);
+              }
+
+              &.view-action {
+                &:hover {
+                  background-color: rgba(34, 197, 94, 0.1);
+                  color: $color-success;
+                }
+              }
+
+              .action-icon {
+                width: 1rem;
+                height: 1rem;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .main-section {
+    .payroll-grid {
+      padding: $spacing-6;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: $spacing-5;
+
+      @media (max-width: 768px) {
+        padding: $spacing-4;
+        grid-template-columns: 1fr;
+        gap: $spacing-4;
+      }
+
+      .payroll-card {
+        border: 1px solid $color-gray-200;
+        border-radius: $border-radius-lg;
+        padding: $spacing-5;
+        background: $color-white;
+        transition: all 0.15s ease;
+        cursor: pointer;
 
       &:hover {
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -306,6 +512,29 @@
         align-items: center;
         margin-bottom: $spacing-3;
 
+        .view-detail-btn {
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          padding: $spacing-2;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: $color-gray-500;
+          transition: all 0.15s ease;
+          border-radius: $border-radius;
+          
+          &:hover {
+            background: $color-gray-100;
+            color: $color-green-primary;
+            transform: scale(1.1);
+          }
+
+          &:active {
+            transform: scale(0.95);
+          }
+        }
+
         .payroll-period {
           display: flex;
           align-items: center;
@@ -431,6 +660,7 @@
           }
         }
       }
+    }
     }
   }
 }

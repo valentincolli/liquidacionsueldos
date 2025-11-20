@@ -1,9 +1,10 @@
 import React from 'react';
-import { Search, Plus, Edit, Eye, Filter, DollarSign, UserX, UserCheck } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Search, Plus, Edit, Eye, Filter, DollarSign, UserX, UserCheck, X } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import { EmployeeViewModal } from '../Components/EmployeeViewModal/EmployeeViewModal.jsx';
 import { NewEmployeeModal } from '../Components/NewEmployeeModal/NewEmployeeModal.jsx';
 import { EmployeeEditModal } from '../Components/EmployeeEditModal/EmployeeEditModal.jsx';
+import { ProcessPayrollModal } from '../Components/ProcessPayrollModal/ProcessPayrollModal';
 import { Tooltip } from '../Components/ToolTip/ToolTip';
 import * as api from '../services/empleadosAPI'
 import '../styles/components/_employees.scss';
@@ -13,7 +14,6 @@ export default function Empleados() {
   const [areas,setAreas]=useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [modalOpen, setModalOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [filtered, setFiltered] = useState([]);
   const [employeeList, setEmployeeList] = useState(employees);
@@ -21,7 +21,13 @@ export default function Empleados() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showConceptsModal, setShowConceptsModal] = useState(false);
   const [showNewEmployeeModal, setShowNewEmployeeModal] = useState(false);
+  const [showProcessPayrollModal, setShowProcessPayrollModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [employeeForPayroll, setEmployeeForPayroll] = useState(null);
+  const [filterEstado, setFilterEstado] = useState('TODOS');
+  const [filterGremio, setFilterGremio] = useState('TODOS');
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const filterDropdownRef = useRef(null);
   
   const normalizeEmployees = (rows) =>
   rows.map(e => ({
@@ -63,15 +69,50 @@ export default function Empleados() {
   
   useEffect(() => {
       const lower = search.toLowerCase();
-      setFiltered(
-          employees.filter((e) =>
+      let result = employees.filter((e) => {
+        // Filtro de búsqueda por texto
+        const matchesSearch = 
+          !search ||
           e.legajo?.toString().includes(search) ||
           `${e.nombre} ${e.apellido}`.toLowerCase().includes(lower) ||
           e.gremioNombre?.toLowerCase().includes(lower) ||
-          e.categoriaNombre?.toLowerCase().includes(lower)
-        )
-      );
-  }, [search, employees]);
+          e.categoriaNombre?.toLowerCase().includes(lower);
+        
+        // Filtro por estado
+        const matchesEstado = 
+          filterEstado === 'TODOS' || 
+          (filterEstado === 'ACTIVO' && e.estado === 'ACTIVO') ||
+          (filterEstado === 'DADO_DE_BAJA' && e.estado === 'DADO_DE_BAJA');
+        
+        // Filtro por gremio
+        const gremioName = e.gremioNombre || e.gremio?.nombre || '';
+        const matchesGremio = 
+          filterGremio === 'TODOS' ||
+          (filterGremio === 'LUZ_Y_FUERZA' && (gremioName === 'LUZ_Y_FUERZA' || gremioName?.toUpperCase() === 'LUZ_Y_FUERZA')) ||
+          (filterGremio === 'UOCRA' && gremioName === 'UOCRA') ||
+          (filterGremio === 'CONVENIO_GENERAL' && (gremioName === 'Convenio General' || gremioName === '' || !gremioName));
+        
+        return matchesSearch && matchesEstado && matchesGremio;
+      });
+      setFiltered(result);
+  }, [search, employees, filterEstado, filterGremio]);
+
+  // Cerrar dropdown al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target)) {
+        setShowFilterDropdown(false);
+      }
+    };
+
+    if (showFilterDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showFilterDropdown]);
   
   const handleSaveEmployee = async (dto, isEdit) => {
       try {
@@ -81,7 +122,6 @@ export default function Empleados() {
           await api.createEmployee(dto);
         }
         await loadEmployees(); // Refrescar lista
-        setModalOpen(false);
       } catch (err) {
         alert("Error al registrar empleado: " + err.message);
       }
@@ -98,8 +138,8 @@ export default function Empleados() {
   };
 
   const handleLiquidarSueldo = (employee) => {
-    //setSelectedEmployee(employee);
-    setModalOpen(true);
+    setEmployeeForPayroll(employee);
+    setShowProcessPayrollModal(true);
   };
 
   const getStatusClass = (status) => {
@@ -135,7 +175,15 @@ export default function Empleados() {
     setShowEditModal(false);
     setShowConceptsModal(false);
     setShowNewEmployeeModal(false);
+    setShowProcessPayrollModal(false);
     setSelectedEmployee(null);
+    setEmployeeForPayroll(null);
+  };
+
+  const handleProcessPayroll = (result) => {
+    console.log('Procesamiento completado:', result);
+    // Puedes agregar lógica adicional aquí si es necesario
+    loadEmployees(); // Refrescar lista si es necesario
   };
 
   const formatDate = (d) => {
@@ -204,11 +252,101 @@ export default function Empleados() {
               className="input search-input"
             />
           </div>
-          <div className="filter-controls">
-            <button className="filter-btn">
+          <div className="filter-controls" ref={filterDropdownRef}>
+            <button 
+              className={`filter-btn ${(filterEstado !== 'TODOS' || filterGremio !== 'TODOS') ? 'active' : ''}`}
+              onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+            >
               <Filter className="filter-icon" />
               Filtros
+              {(filterEstado !== 'TODOS' || filterGremio !== 'TODOS') && (
+                <span className="filter-badge">
+                  {[filterEstado !== 'TODOS' ? '1' : '', filterGremio !== 'TODOS' ? '1' : ''].filter(Boolean).length}
+                </span>
+              )}
             </button>
+            
+            {showFilterDropdown && (
+              <div className="filter-dropdown">
+                <div className="filter-dropdown-header">
+                  <h3>Filtros</h3>
+                  <button 
+                    className="close-dropdown-btn"
+                    onClick={() => setShowFilterDropdown(false)}
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+                
+                <div className="filter-group">
+                  <label className="filter-label">Estado</label>
+                  <div className="filter-options">
+                    <button
+                      className={`filter-option ${filterEstado === 'TODOS' ? 'active' : ''}`}
+                      onClick={() => setFilterEstado('TODOS')}
+                    >
+                      Todos
+                    </button>
+                    <button
+                      className={`filter-option ${filterEstado === 'ACTIVO' ? 'active' : ''}`}
+                      onClick={() => setFilterEstado('ACTIVO')}
+                    >
+                      Activos
+                    </button>
+                    <button
+                      className={`filter-option ${filterEstado === 'DADO_DE_BAJA' ? 'active' : ''}`}
+                      onClick={() => setFilterEstado('DADO_DE_BAJA')}
+                    >
+                      Dados de baja
+                    </button>
+                  </div>
+                </div>
+
+                <div className="filter-group">
+                  <label className="filter-label">Gremio</label>
+                  <div className="filter-options">
+                    <button
+                      className={`filter-option ${filterGremio === 'TODOS' ? 'active' : ''}`}
+                      onClick={() => setFilterGremio('TODOS')}
+                    >
+                      Todos
+                    </button>
+                    <button
+                      className={`filter-option ${filterGremio === 'LUZ_Y_FUERZA' ? 'active' : ''}`}
+                      onClick={() => setFilterGremio('LUZ_Y_FUERZA')}
+                    >
+                      Luz y Fuerza
+                    </button>
+                    <button
+                      className={`filter-option ${filterGremio === 'UOCRA' ? 'active' : ''}`}
+                      onClick={() => setFilterGremio('UOCRA')}
+                    >
+                      UOCRA
+                    </button>
+                    <button
+                      className={`filter-option ${filterGremio === 'CONVENIO_GENERAL' ? 'active' : ''}`}
+                      onClick={() => setFilterGremio('CONVENIO_GENERAL')}
+                    >
+                      Convenio General
+                    </button>
+                  </div>
+                </div>
+
+                {(filterEstado !== 'TODOS' || filterGremio !== 'TODOS') && (
+                  <div className="filter-actions">
+                    <button
+                      className="clear-filters-btn"
+                      onClick={() => {
+                        setFilterEstado('TODOS');
+                        setFilterGremio('TODOS');
+                      }}
+                    >
+                      Limpiar filtros
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -331,6 +469,13 @@ export default function Empleados() {
         //onConceptos={handleConceptos}
         //onLiquidarSueldo={handleLiquidarSueldo}
         //onHistorialLiquidaciones={handleHistorialLiquidaciones}
+      />
+      <ProcessPayrollModal
+        isOpen={showProcessPayrollModal}
+        onClose={closeModals}
+        onProcess={handleProcessPayroll}
+        employees={employees}
+        initialEmployee={employeeForPayroll}
       />
     </div>
   );

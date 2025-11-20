@@ -65,3 +65,6 @@ export const getAreas = () =>
 
 export const getZonas = () =>
     axiosClient.get(`/zonas`).then((r)=>r.data);
+
+export const getBasicoByCatAndZona = (idCategoria, idZona) =>
+    axiosClient.get(`/uocra/basico/${idCategoria}/${idZona}`).then((r)=>r.data);

@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import { Calculator, Plus, TrendingUp, Clock, History, Settings, Printer, Download, FileText, CalendarDays, User } from 'lucide-react';
+import { Calculator, Plus, TrendingUp, Clock, History, Settings, Printer, Download, FileText, CalendarDays, User, Eye, CheckCircle } from 'lucide-react';
 import '../styles/components/_PlaceHolder.scss';
 import '../styles/components/_liquidacion.scss';
 import {ProcessPayrollModal} from '../Components/ProcessPayrollModal/ProcessPayrollModal';
@@ -13,6 +13,8 @@ export default function Liquidacion() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showReportsModal, setShowReportsModal] = useState(false);
   const [selectedPayroll, setSelectedPayroll] = useState(null);
+  const [payrollDetails, setPayrollDetails] = useState(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
   const [payrollList, setPayrollList] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Todos');
@@ -41,14 +43,28 @@ export default function Liquidacion() {
     loadPayrolls();
   }, []);
 
-  const handleViewDetails = (payroll) => {
-    setSelectedPayroll(payroll);
+  const handleViewDetails = async (liquidacion) => {
+    setSelectedPayroll(liquidacion);
     setShowDetailModal(true);
+    setLoadingDetails(true);
+    setPayrollDetails(null);
+
+    try {
+      // Cargar detalles de la liquidación desde la API
+      const detalle = await api.getDetallePago(liquidacion.id || liquidacion.idPago);
+      setPayrollDetails(detalle);
+    } catch (error) {
+      console.error('Error al cargar detalles de la liquidación:', error);
+      alert('No se pudieron cargar los detalles de la liquidación.');
+    } finally {
+      setLoadingDetails(false);
+    }
   };
 
   const handleProcessPayroll = (result) => {
     console.log('Procesamiento completado:', result);
-    // Aquí puedes actualizar la lista con el nuevo resultado
+    // Actualizar la lista de liquidaciones después de procesar
+    loadPayrolls();
   };
 
   const handlePrintPayroll = (payroll) => {
@@ -129,55 +145,65 @@ export default function Liquidacion() {
 
       {/* Placeholder Content */}
       <div className="main-content">
-        <div className="card main-section">
-          {liquidaciones.length === 0 ? (
-            <div className="empty-state">
-              <FileText className="empty-icon" />
-              <h3>Todavía no hay liquidaciones</h3>
-              <p>Cuando se generen, aparecerán aquí.</p>
-            </div>
+        <div className="card employees-list">
+          <div className="card-header list-header">
+            <h2 className="list-title section-title-effect">Lista de Liquidaciones</h2>
+            <p className="list-description">
+              {liquidaciones.length} liquidación{liquidaciones.length !== 1 ? 'es' : ''} encontrada{liquidaciones.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+          <div className="card-content list-content">
+            {liquidaciones.length === 0 ? (
+              <div className="empty-state">
+                <FileText className="empty-icon" />
+                <h3>Todavía no hay liquidaciones</h3>
+                <p>Cuando se generen, aparecerán aquí.</p>
+              </div>
             ) : (
-            <div className="payroll-grid">
-              {liquidaciones.map((liq) => (
-                <div
-                  key={liq.id}
-                  className="payroll-card employee-payroll"
-                  onClick={() => console.log(`Ver detalle de ${liq.id}`)}
-                >
-                  <div className="payroll-header">
-                    <div className="payroll-period">
-                      <CalendarDays className="period-icon" />
-                      <span className="period-name">{liq.periodoPago}</span>
+              <div className="employee-list">
+                {liquidaciones.map((liq) => (
+                  <div
+                    key={liq.id}
+                    className="employee-item"
+                  >
+                    <div className="employee-grid">
+                      <div className="employee-info">
+                        <h3 className="employee-name">{`${liq.nombreEmpleado || ''} ${liq.apellidoEmpleado || ''}`}</h3>
+                        <p className="employee-email">Legajo: {liq.legajoEmpleado || '-'}</p>
+                      </div>
+                      <div className="employee-position">
+                        <p className="position-title">Período: {liq.periodoPago || '-'}</p>
+                        <p className="department">Fecha Pago: {liq.fechaPago ? new Date(liq.fechaPago).toLocaleDateString('es-AR') : '-'}</p>
+                      </div>
+                      <div className="employee-salary">
+                        <p className="salary-amount">
+                          ${(liq.total_neto ?? 0).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                        <p className="hire-date">Total Neto</p>
+                      </div>
+                      <div className="employee-status">
+                        <span className={`status-badge ${liq.estado?.toLowerCase() || 'completada'}`}>
+                          {liq.estado ? liq.estado.charAt(0).toUpperCase() + liq.estado.slice(1) : 'Completada'}
+                        </span>
+                      </div>
                     </div>
-                    <span className={`payroll-status ${liq.estado}`}>
-                      {liq.estado ? liq.estado.charAt(0).toUpperCase() + liq.estado.slice(1) : 'Completada'}
-                    </span>
-                  </div>
-
-                  <div className="salary-breakdown">
-                    <div className="salary-item total">
-                      <span className="salary-label">Total</span>
-                      <span className="salary-value">
-                        ${(liq.total_neto ?? 0).toLocaleString("es-AR")}
-                      </span>
+                    <div className="employee-actions">
+                      <button
+                        className="action-icon-button view-action"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewDetails(liq);
+                        }}
+                        title="Ver detalle"
+                      >
+                        <Eye className="action-icon" />
+                      </button>
                     </div>
                   </div>
-
-                  <div className="payroll-period-info">
-                    <div className="period-detail">
-                      <User className="period-icon" />
-                      <span>
-                        {liq.nombreEmpleado} {liq.apellidoEmpleado} - Legajo: {liq.legajoEmpleado}
-                      </span>
-                    </div>
-                    <span className="payment-date">
-                      Pago: {liq.fechaPago}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Quick Actions */}
@@ -218,107 +244,178 @@ export default function Liquidacion() {
         employees={employees}
       />
 
-      {/* Payroll Detail Modal */}
+      {/* Payroll Detail Modal - Formato Recibo */}
       <Modal
         isOpen={showDetailModal}
-        onClose={() => setShowDetailModal(false)}
-        title={`Liquidación - ${selectedPayroll?.employeeName}`}
+        onClose={() => {
+          setShowDetailModal(false);
+          setSelectedPayroll(null);
+          setPayrollDetails(null);
+        }}
+        title={`Detalle de Liquidación`}
         size="large"
+        className="process-payroll-modal"
       >
-        {selectedPayroll && (
-          <div className="employee-payroll-detail">
-            <div className="employee-header">
-              <div className="employee-info-detail">
-                <h3>{selectedPayroll.employeeName}</h3>
-                <p>{selectedPayroll.position} - {selectedPayroll.department}</p>
-                <p>ID: {selectedPayroll.employeeId}</p>
+        {loadingDetails ? (
+          <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <p>Cargando detalles...</p>
+          </div>
+        ) : selectedPayroll && payrollDetails && (
+          <div className="receipt-preview">
+            <div className="receipt-container">
+              <div className="receipt-stamp">
+                <CheckCircle className="stamp-icon" />
+                <span>RECIBO GENERADO</span>
               </div>
-              <div className={`status-badge ${selectedPayroll.status.toLowerCase()}`}>
-                {selectedPayroll.status}
-              </div>
-            </div>
 
-            <div className="liquidation-breakdown">
-              <div className="breakdown-section">
-                <h4>Conceptos Remunerativos</h4>
-                <div className="concept-list">
-                  <div className="concept-item">
-                    <span className="concept-name">Sueldo Básico</span>
-                    <span className="concept-amount">${selectedPayroll.basicSalary.toLocaleString()}</span>
+              <div className="receipt-header">
+                <div className="company-info">
+                  <div className="company-logo">
+                    <div className="logo-circle">
+                      <span>C</span>
+                    </div>
                   </div>
-                  <div className="concept-item">
-                    <span className="concept-name">Presentismo</span>
-                    <span className="concept-amount">${(selectedPayroll.bonifications * 0.4).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</span>
+                  <div className="company-details">
+                    <h3>COOP.SERV.PUB.25 DE MAYO LTDA.</h3>
+                    <p>Domicilio: RAMIREZ 367 - CUIT: 30-54569238-0</p>
+                    <div className="company-accent"></div>
                   </div>
-                  <div className="concept-item">
-                    <span className="concept-name">Antigüedad</span>
-                    <span className="concept-amount">${(selectedPayroll.bonifications * 0.6).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</span>
-                  </div>
-                </div>
-                <div className="section-total positive">
-                  <span>Total Remunerativo:</span>
-                  <span>${(selectedPayroll.basicSalary + selectedPayroll.bonifications).toLocaleString()}</span>
                 </div>
               </div>
 
-              <div className="breakdown-section">
-                <h4>Descuentos</h4>
-                <div className="concept-list">
-                  <div className="concept-item">
-                    <span className="concept-name">Jubilación (11%)</span>
-                    <span className="concept-amount">-${Math.round(selectedPayroll.basicSalary * 0.11).toLocaleString()}</span>
+              <div className="receipt-employee-info">
+                <div className="employee-data">
+                  <div className="data-row">
+                    <span className="label">APELLIDO Y NOMBRE:</span>
+                    <span className="value">{selectedPayroll.nombreEmpleado || ''} {selectedPayroll.apellidoEmpleado || ''}</span>
                   </div>
-                  <div className="concept-item">
-                    <span className="concept-name">Obra Social (3%)</span>
-                    <span className="concept-amount">-${Math.round(selectedPayroll.basicSalary * 0.03).toLocaleString()}</span>
-                  </div>
-                  <div className="concept-item">
-                    <span className="concept-name">ANSSAL (3%)</span>
-                    <span className="concept-amount">-${Math.round(selectedPayroll.basicSalary * 0.03).toLocaleString()}</span>
+                  <div className="data-row">
+                    <span className="label">PERÍODO DE PAGO:</span>
+                    <span className="value">{selectedPayroll.periodoPago || payrollDetails.periodoPago || '-'}</span>
                   </div>
                 </div>
-                <div className="section-total negative">
-                  <span>Total Descuentos:</span>
-                  <span>-${selectedPayroll.deductions.toLocaleString()}</span>
+                <div className="employee-meta">
+                  <div className="meta-item">
+                    <span className="label">LEGAJO:</span>
+                    <span className="value">{selectedPayroll.legajoEmpleado || '-'}</span>
+                  </div>
+                  {payrollDetails.categoriaEmpleado && (
+                    <div className="meta-item">
+                      <span className="label">CATEGORÍA:</span>
+                      <span className="value">{payrollDetails.categoriaEmpleado}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <div className="final-total">
-                <span className="total-label">NETO A COBRAR:</span>
-                <span className="total-amount">${selectedPayroll.netSalary.toLocaleString()}</span>
-              </div>
-            </div>
+              {payrollDetails.conceptos && payrollDetails.conceptos.length > 0 ? (
+                <>
+                  <div className="receipt-concepts">
+                    <div className="concepts-header">
+                      <span>CONCEPTO</span>
+                      <span>UNIDADES</span>
+                      <span>REMUNERACIONES</span>
+                      <span>DESCUENTOS</span>
+                    </div>
 
-            <div className="liquidation-info">
-              <div className="info-grid">
-                <div className="info-item">
-                  <span className="info-label">Período:</span>
-                  <span className="info-value">{selectedPayroll.periodName}</span>
+                    {payrollDetails.conceptos.map((concepto, index) => {
+                      const isRemuneration = 
+                        concepto.tipoConcepto === 'CATEGORIA' || 
+                        concepto.tipoConcepto === 'BONIFICACION_VARIABLE' || 
+                        concepto.tipoConcepto === 'BONIFICACION_FIJA' ||
+                        concepto.tipoConcepto === 'CATEGORIA_ZONA';
+                      const isDeduction = concepto.tipoConcepto === 'DESCUENTO';
+                      const total = Number(concepto.total || 0);
+                      const unidades = concepto.unidades || concepto.cantidad || 0;
+
+                      return (
+                        <div key={index} className="concept-line">
+                          <span className="concept-code">{concepto.idReferencia || concepto.id || index + 1}</span>
+                          <span className="concept-name">{concepto.nombre || `Concepto ${index + 1}`}</span>
+                          <span className="concept-units">{unidades}</span>
+                          <span className="concept-remuneration">
+                            {isRemuneration && total > 0 ? total.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''}
+                          </span>
+                          <span className="concept-deduction">
+                            {isDeduction && total < 0 ? Math.abs(total).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {(() => {
+                    const remunerations = payrollDetails.conceptos
+                      .filter(c => 
+                        c.tipoConcepto === 'CATEGORIA' || 
+                        c.tipoConcepto === 'BONIFICACION_VARIABLE' || 
+                        c.tipoConcepto === 'BONIFICACION_FIJA' ||
+                        c.tipoConcepto === 'CATEGORIA_ZONA'
+                      )
+                      .reduce((sum, c) => sum + (Number(c.total) || 0), 0);
+
+                    const deductions = payrollDetails.conceptos
+                      .filter(c => c.tipoConcepto === 'DESCUENTO')
+                      .reduce((sum, c) => sum + Math.abs(Number(c.total) || 0), 0);
+
+                    const netAmount = (payrollDetails.total || payrollDetails.total_neto || selectedPayroll.total_neto || remunerations - deductions);
+
+                    return (
+                      <div className="receipt-totals">
+                        <div className="total-breakdown">
+                          <div className="breakdown-line">
+                            <span>Total Remuneraciones:</span>
+                            <span className="amount-positive">+${remunerations.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                          </div>
+                          <div className="breakdown-line">
+                            <span>Total Descuentos:</span>
+                            <span className="amount-negative">-${deductions.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                          </div>
+                        </div>
+                        <div className="total-line">
+                          <span>TOTAL NETO:</span>
+                          <span className="final-amount">${netAmount.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                          <div className="amount-indicator"></div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  <div className="receipt-footer">
+                    <div className="payment-info">
+                      <span>LUGAR Y FECHA DE PAGO: HASENKAMP - {
+                        selectedPayroll.fechaPago || payrollDetails.fechaPago 
+                          ? new Date(selectedPayroll.fechaPago || payrollDetails.fechaPago).toLocaleDateString('es-AR')
+                          : new Date().toLocaleDateString('es-AR')
+                      }</span>
+                    </div>
+                    {(() => {
+                      const remunerations = payrollDetails.conceptos
+                        .filter(c => 
+                          c.tipoConcepto === 'CATEGORIA' || 
+                          c.tipoConcepto === 'BONIFICACION_VARIABLE' || 
+                          c.tipoConcepto === 'BONIFICACION_FIJA' ||
+                          c.tipoConcepto === 'CATEGORIA_ZONA'
+                        )
+                        .reduce((sum, c) => sum + (Number(c.total) || 0), 0);
+                      const deductions = payrollDetails.conceptos
+                        .filter(c => c.tipoConcepto === 'DESCUENTO')
+                        .reduce((sum, c) => sum + Math.abs(Number(c.total) || 0), 0);
+                      const netAmount = (payrollDetails.total || payrollDetails.total_neto || selectedPayroll.total_neto || remunerations - deductions);
+
+                      return (
+                        <div className="amount-words">
+                          <span>SON PESOS: {netAmount.toLocaleString('es-AR')} * * * *</span>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </>
+              ) : (
+                <div style={{ padding: '2rem', textAlign: 'center' }}>
+                  <p>No se encontraron detalles de conceptos para esta liquidación.</p>
                 </div>
-                {selectedPayroll.processedDate && (
-                  <div className="info-item">
-                    <span className="info-label">Fecha de Proceso:</span>
-                    <span className="info-value">{new Date(selectedPayroll.processedDate).toLocaleDateString('es-ES')}</span>
-                  </div>
-                )}
-                {selectedPayroll.paymentDate && (
-                  <div className="info-item">
-                    <span className="info-label">Fecha de Pago:</span>
-                    <span className="info-value">{new Date(selectedPayroll.paymentDate).toLocaleDateString('es-ES')}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="detail-actions">
-              <button className="btn btn-primary" onClick={() => handlePrintPayroll(selectedPayroll)}>
-                <Printer className="h-4 w-4 mr-2" />
-                Imprimir Recibo
-              </button>
-              <button className="btn btn-secondary" onClick={() => handleDownloadPayroll(selectedPayroll)}>
-                <Download className="h-4 w-4 mr-2" />
-                Descargar PDF
-              </button>
+              )}
             </div>
           </div>
         )}
@@ -327,6 +424,18 @@ export default function Liquidacion() {
           <button className="btn btn-secondary" onClick={() => setShowDetailModal(false)}>
             Cerrar
           </button>
+          {selectedPayroll && (
+            <>
+              <button className="btn btn-success" onClick={() => handlePrintPayroll(selectedPayroll)}>
+                <Printer className="h-4 w-4 mr-2" />
+                Imprimir
+              </button>
+              <button className="btn btn-primary" onClick={() => handleDownloadPayroll(selectedPayroll)}>
+                <Download className="h-4 w-4 mr-2" />
+                Descargar
+              </button>
+            </>
+          )}
         </ModalFooter>
       </Modal>
     </div>

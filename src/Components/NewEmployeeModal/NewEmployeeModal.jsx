@@ -4,6 +4,16 @@ import { User, Building, X, UserPlus, ListChecks } from 'lucide-react';
 import * as api from "../../services/empleadosAPI";
 import { form } from 'framer-motion/client';
 
+// Función helper para formatear moneda en formato argentino ($100.000,00)
+const formatCurrencyAR = (value) => {
+  if (value === null || value === undefined || isNaN(value)) return '$0,00';
+  const numValue = Number(value);
+  const absValue = Math.abs(numValue);
+  const parts = absValue.toFixed(2).split('.');
+  const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return `$${integerPart},${parts[1]}`;
+};
+
 export function NewEmployeeModal({ isOpen, onClose, onSave }) {
   const removeArea = (id) => {
     const numId = Number(id);
@@ -21,11 +31,14 @@ export function NewEmployeeModal({ isOpen, onClose, onSave }) {
     areas: [],
     inicioActividad: new Date().toISOString().split('T')[0], // Fecha actual
     estado: 'ACTIVO',
+    gremio: null,
     idGremio: null,
     idCategoria: null,
     idCategoria: null,
     banco: '',
-    cuil: ''
+    cuil: '',
+    salary: '',
+    bonoArea: 0
   });
   
   const [errors, setErrors] = useState({});
@@ -45,6 +58,26 @@ export function NewEmployeeModal({ isOpen, onClose, onSave }) {
 
   // Rango de categorías por gremio
   const LUZ_Y_FUERZA_IDS = Array.from({ length: 18 }, (_, i) => i + 1); // Luz y Fuerza usa los id de categoria 1-18
+
+  // Funciones helper para categorías (deben estar antes de los useEffects)
+  const getCatId = (c) => c?.id ?? c?.idCategoria ?? c?.categoriaId;
+  const getCatNombre = (c) => c?.nombre ?? c?.nombreCategoria ?? c?.descripcion ?? c?.categoria ?? `Categoría ${getCatId(c)}`;
+  const getCatBasico = (c) => c?.salarioBasico ?? c?.basico ?? c?.sueldoBasico ?? c?.monto ?? c?.salario ?? 0;
+
+  // Normaliza strings para comparar sin importar mayúsculas, tildes, espacios, etc.
+  const normalize = (s) =>
+  (s || '')
+    .toString()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+  
+  // Compara dos strings normalizados
+  const sameName = (a, b) => normalize(a) === normalize(b);
+
+  const findCategoriaById = (id) => categorias.find(c => String(getCatId(c)) === String(id));
+  const findCategoriaByName = (name) => 
+    categorias.find(c => sameName(getCatNombre(c), name));
 
   // Load employees al montar
   useEffect(() => {
@@ -104,14 +137,69 @@ export function NewEmployeeModal({ isOpen, onClose, onSave }) {
       loadCategorias();
     }, []);
 
-  // Maneja el toggle de selección de conceptos
+  // Carga los conceptos (bonificaciones fijas y descuentos) desde la API
   useEffect(() => {
-  setConceptos([
-    { id: 1, nombre: 'Horas Extras', unidad: 'horas' },
-    { id: 2, nombre: 'Comisión', unidad: '%' },
-    { id: 3, nombre: 'Bono Producción', unidad: 'unidades' }
-  ]);
-  }, []);
+    const loadConceptos = async () => {
+      try {
+        // Cargar bonificaciones fijas filtradas por gremio
+        const bonificacionesData = await api.getConceptos();
+        let filteredBonificaciones = [];
+        if (formData.gremio === 'LUZ_Y_FUERZA') {
+          // Luz y Fuerza: IDs del 1 al 31
+          filteredBonificaciones = bonificacionesData.filter(concepto => {
+            const id = concepto.idBonificacion ?? concepto.id;
+            return id >= 1 && id <= 31;
+          });
+        } else if (formData.gremio === 'UOCRA') {
+          // UOCRA: IDs a partir del 32
+          filteredBonificaciones = bonificacionesData.filter(concepto => {
+            const id = concepto.idBonificacion ?? concepto.id;
+            return id >= 32;
+          });
+        }
+        
+        // Cargar descuentos (sin filtrar por gremio, son generales)
+        const descuentosData = await api.getDescuentos();
+        
+        // Mapear bonificaciones - usar prefijo 'BON_' para evitar conflictos de IDs
+        const mappedBonificaciones = filteredBonificaciones.map((concepto) => {
+          const originalId = concepto.idBonificacion ?? concepto.id;
+          return {
+            id: `BON_${originalId}`, // Prefijo para bonificaciones
+            originalId: originalId, // ID original para enviar al backend
+            nombre: concepto.nombre ?? concepto.descripcion,
+            unidad: concepto.porcentaje ? '%' : 'monto',
+            porcentaje: concepto.porcentaje ?? null,
+            montoUnitario: concepto.montoUnitario ?? concepto.monto ?? null,
+            tipo: 'BONIFICACION_FIJA',
+            isDescuento: false
+          };
+        });
+        
+        // Mapear descuentos - usar prefijo 'DESC_' para evitar conflictos de IDs
+        const mappedDescuentos = descuentosData.map((descuento) => {
+          const originalId = descuento.idDescuento ?? descuento.id;
+          return {
+            id: `DESC_${originalId}`, // Prefijo para descuentos
+            originalId: originalId, // ID original para enviar al backend
+            nombre: descuento.nombre ?? descuento.descripcion,
+            unidad: descuento.porcentaje ? '%' : 'monto',
+            porcentaje: descuento.porcentaje ?? null,
+            montoUnitario: descuento.montoUnitario ?? descuento.monto ?? null,
+            tipo: 'DESCUENTO',
+            isDescuento: true
+          };
+        });
+        
+        // Combinar bonificaciones y descuentos
+        setConceptos([...mappedBonificaciones, ...mappedDescuentos]);
+      } catch (error) {
+        console.error('Error al cargar conceptos:', error);
+        setConceptos([]);
+      }
+    };
+    loadConceptos();
+  }, [formData.gremio]);
 
   // Actualiza el salario base cuando cambia la categoría seleccionada
   useEffect(() => {
@@ -120,17 +208,151 @@ export function NewEmployeeModal({ isOpen, onClose, onSave }) {
     if (formData.idCategoria) {
       const cat = findCategoriaById(formData.idCategoria);
       if (cat) {
-        const basico = getCatBasico(cat);
-        setFormData(prev => 
-          prev.salary === basico && prev.categoria === getCatNombre(cat)
-          ? prev
-          : { ...prev, salary: basico, categoria: getCatNombre(cat) }
-        );
+        // Si es UOCRA y hay zona seleccionada, calcular con el endpoint
+        if (formData.gremio === 'UOCRA' && formData.zonaId) {
+          const calculateSalary = async () => {
+            try {
+              const basicoData = await api.getBasicoByCatAndZona(formData.idCategoria, formData.zonaId);
+              const basico = Number(basicoData?.basico ?? basicoData?.salarioBasico ?? basicoData?.monto ?? basicoData?.salario ?? 0);
+              setFormData(prev => {
+                const currentSalary = Number(prev.salary) || 0;
+                if (currentSalary === basico && prev.categoria === getCatNombre(cat)) {
+                  return prev;
+                }
+                return { ...prev, salary: String(basico), categoria: getCatNombre(cat) };
+              });
+            } catch (error) {
+              console.error('Error al obtener básico por zona y categoría:', error);
+              // Fallback al básico de la categoría
+              const basico = Number(getCatBasico(cat)) || 0;
+              setFormData(prev => {
+                const currentSalary = Number(prev.salary) || 0;
+                if (currentSalary === basico && prev.categoria === getCatNombre(cat)) {
+                  return prev;
+                }
+                return { ...prev, salary: String(basico), categoria: getCatNombre(cat) };
+              });
+            }
+          };
+          calculateSalary();
+        } else {
+          // Para Luz y Fuerza o Convenio General, usar el básico de la categoría directamente
+          const basico = Number(getCatBasico(cat)) || 0;
+          setFormData(prev => {
+            const currentSalary = Number(prev.salary) || 0;
+            if (currentSalary === basico && prev.categoria === getCatNombre(cat)) {
+              return prev;
+            }
+            return { ...prev, salary: String(basico), categoria: getCatNombre(cat) };
+          });
+        }
         setCategoriaNoEncontrada(false);
       }
       return;
     }
-  });
+  }, [formData.idCategoria, formData.zonaId, formData.gremio, categorias]);
+
+  // Calcula el bono de área cuando cambian las áreas (siempre usa categoría 11)
+  useEffect(() => {
+    const calculateBonoArea = async () => {
+      // Solo calcular si es Luz y Fuerza y hay áreas seleccionadas
+      if (formData.gremio !== 'LUZ_Y_FUERZA' || !formData.areas?.length) {
+        setFormData(prev => ({ ...prev, bonoArea: 0 }));
+        return;
+      }
+
+      try {
+        // Obtener el básico de categoría 11
+        const categoria11 = await api.getCategoriaById(11);
+        // Usar getCatBasico para obtener el básico correctamente
+        const basicoCat11 = getCatBasico(categoria11);
+
+        if (!basicoCat11 || basicoCat11 === 0) {
+          console.warn('No se pudo obtener el básico de categoría 11');
+          setFormData(prev => ({ ...prev, bonoArea: 0 }));
+          return;
+        }
+
+        // Calcular bonos para cada área usando siempre categoría 11
+        const bonosPromises = formData.areas.map(async (areaId) => {
+          try {
+            // Usar categoría 11 para obtener el porcentaje (no la categoría del empleado)
+            const porcentajeResponse = await api.getPorcentajeArea(Number(areaId), 11);
+            // El porcentaje puede venir como número directo o como objeto con propiedad porcentaje
+            const porcentajeNum = typeof porcentajeResponse === 'number' 
+              ? porcentajeResponse 
+              : Number(porcentajeResponse?.porcentaje ?? porcentajeResponse) || 0;
+            // Calcular: (básico_cat11 * porcentaje) / 100
+            return (basicoCat11 * porcentajeNum) / 100;
+          } catch (error) {
+            console.error(`Error al obtener porcentaje para área ${areaId}:`, error);
+            return 0;
+          }
+        });
+
+        const bonos = await Promise.all(bonosPromises);
+        const bonoTotal = bonos.reduce((sum, bono) => sum + bono, 0);
+
+        setFormData(prev => ({ ...prev, bonoArea: bonoTotal }));
+      } catch (error) {
+        console.error('Error al calcular bono de área:', error);
+        setFormData(prev => ({ ...prev, bonoArea: 0 }));
+      }
+    };
+
+    calculateBonoArea();
+  }, [formData.areas, formData.gremio]); // Removido formData.idCategoria de las dependencias
+
+  // Calcula el salario básico cuando cambia la zona o categoría en UOCRA
+  useEffect(() => {
+    const calculateSalaryByZona = async () => {
+      // Solo calcular si es UOCRA, hay categoría y zona seleccionadas
+      if (formData.gremio !== 'UOCRA' || !formData.idCategoria || !formData.zonaId) {
+        // Si es UOCRA pero falta zona o categoría, limpiar salario
+        if (formData.gremio === 'UOCRA') {
+          setFormData(prev => {
+            if (prev.gremio === 'UOCRA' && (!prev.idCategoria || !prev.zonaId) && prev.salary) {
+              return { ...prev, salary: '' };
+            }
+            return prev;
+          });
+        }
+        return;
+      }
+
+      try {
+        const basicoData = await api.getBasicoByCatAndZona(formData.idCategoria, formData.zonaId);
+        const basico = Number(basicoData?.basico ?? basicoData?.salarioBasico ?? basicoData?.monto ?? basicoData?.salario ?? 0);
+        
+        setFormData(prev => {
+          // Verificar que los valores todavía coinciden (para evitar actualizaciones obsoletas)
+          if (prev.gremio === 'UOCRA' && prev.idCategoria === formData.idCategoria && prev.zonaId === formData.zonaId) {
+            const currentSalary = Number(prev.salary) || 0;
+            if (currentSalary === basico) return prev;
+            return { ...prev, salary: String(basico) };
+          }
+          return prev;
+        });
+      } catch (error) {
+        console.error('Error al obtener básico por zona y categoría:', error);
+        // Si falla, usar el básico de la categoría como fallback
+        const cat = findCategoriaById(formData.idCategoria);
+        if (cat) {
+          const basico = Number(getCatBasico(cat)) || 0;
+          setFormData(prev => {
+            if (prev.gremio === 'UOCRA' && prev.idCategoria === formData.idCategoria && prev.zonaId === formData.zonaId) {
+              const currentSalary = Number(prev.salary) || 0;
+              if (currentSalary === basico) return prev;
+              return { ...prev, salary: String(basico) };
+            }
+            return prev;
+          });
+        }
+      }
+    };
+
+    calculateSalaryByZona();
+  }, [formData.zonaId, formData.gremio, formData.idCategoria, categorias]);
 
   useEffect(() => {
     if (!formData.gremio) {
@@ -150,27 +372,6 @@ export function NewEmployeeModal({ isOpen, onClose, onSave }) {
       setFilteredCategorias(categorias);
     }
   }, [formData.gremio, categorias]);
-
-  // Normaliza strings para comparar sin importar mayúsculas, tildes, espacios, etc.
-  const normalize = (s) =>
-  (s || '')
-    .toString()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
-  
-  // Compara dos strings normalizados
-  const sameName = (a, b) => normalize(a) === normalize(b);
-
-  const findCategoriaByName = (name) => 
-    categorias.find(c => sameName(getCatNombre(c), name));
-
-  // Verifica si la categoría actual no está en el catálogo
-  const getCatId = (c) => c?.id ?? c?.idCategoria ?? c?.categoriaId;
-  const getCatNombre = (c) => c?.nombreCategoria ?? c?.descripcion ?? c?.categoria ?? `Categoría ${getCatId(c)}`;
-  const getCatBasico = (c) => c?.salarioBasico ?? c?.basico ?? c?.sueldoBasico ?? c?.monto ?? c?.salario ?? 0;
-
-  const findCategoriaById = (id) => categorias.find(c => String(getCatId(c)) === String(id));
   
   // Agregar área seleccionada desde el select
   const addSelectedArea = () => {
@@ -212,14 +413,39 @@ export function NewEmployeeModal({ isOpen, onClose, onSave }) {
   };
 
   // Maneja el cambio de categoría y actualiza el salario base
-  const handleCategoriaChange = (id) => {
+  const handleCategoriaChange = async (id) => {
     const cat = findCategoriaById(Number(id)); // <-- convertir aquí
-    setFormData(prev => ({
-      ...prev,
-      idCategoria: Number(id),                 // <-- guardar número en el state
-      categoria: cat ? getCatNombre(cat) : prev.categoria,
-      salary: cat ? getCatBasico(cat) : ''
-    }));
+    if (!cat) {
+      setFormData(prev => ({
+        ...prev,
+        idCategoria: Number(id),
+        categoria: '',
+        salary: ''
+      }));
+      if (errors?.categoria) setErrors(prev => ({ ...prev, categoria: '' }));
+      return;
+    }
+
+    // Actualizar idCategoria y categoria
+    // Si es UOCRA, el useEffect calculará el salario automáticamente cuando cambie idCategoria o zonaId
+    setFormData(prev => {
+      // Si no es UOCRA o no hay zona, calcular el básico directamente
+      if (prev.gremio !== 'UOCRA' || !prev.zonaId) {
+        const basico = Number(getCatBasico(cat)) || 0;
+        return {
+          ...prev,
+          idCategoria: Number(id),
+          categoria: getCatNombre(cat),
+          salary: String(basico)
+        };
+      }
+      // Si es UOCRA y hay zona, solo actualizar categoría y dejar que el useEffect calcule el salario
+      return {
+        ...prev,
+        idCategoria: Number(id),
+        categoria: getCatNombre(cat)
+      };
+    });
     if (errors?.categoria) setErrors(prev => ({ ...prev, categoria: '' }));
   };
 
@@ -294,24 +520,71 @@ export function NewEmployeeModal({ isOpen, onClose, onSave }) {
     setIsLoading(true);
 
     try {
+      // Construir conceptosAsignados según el DTO
+      const conceptosAsignados = [];
+      
+      // 1. Bonificaciones fijas y descuentos (conceptos seleccionados)
+      Object.keys(conceptosSeleccionados).forEach(conceptId => {
+        // conceptId ahora puede ser 'BON_X' o 'DESC_X'
+        const concepto = conceptos.find(c => c.id === conceptId);
+        const units = conceptosSeleccionados[conceptId]?.units;
+        if (concepto && units && units > 0) {
+          const tipoConcepto = concepto.isDescuento || concepto.tipo === 'DESCUENTO' 
+            ? 'DESCUENTO' 
+            : 'BONIFICACION_FIJA';
+          // Usar originalId para enviar al backend
+          conceptosAsignados.push({
+            idEmpleadoConcepto: null, // Nuevo concepto
+            legajo: Number(formData.legajo),
+            tipoConcepto: tipoConcepto,
+            idReferencia: Number(concepto.originalId), // ID original sin prefijo
+            unidades: Number(units)
+          });
+        }
+      });
+
+      // 2. Bonificaciones de área (para LUZ_Y_FUERZA)
+      if (formData.gremio === 'LUZ_Y_FUERZA' && formData.areas && formData.areas.length > 0) {
+        formData.areas.forEach(areaId => {
+          conceptosAsignados.push({
+            idEmpleadoConcepto: null,
+            legajo: Number(formData.legajo),
+            tipoConcepto: 'BONIFICACION_VARIABLE',
+            idReferencia: Number(areaId),
+            unidades: 1 // Por defecto 1 unidad para área
+          });
+        });
+      }
+
+      // 3. Categoría-Zona (para UOCRA)
+      if (formData.gremio === 'UOCRA' && formData.zonaId && formData.idCategoria) {
+        conceptosAsignados.push({
+          idEmpleadoConcepto: null,
+          legajo: Number(formData.legajo),
+          tipoConcepto: 'CATEGORIA_ZONA',
+          idReferencia: Number(formData.zonaId), // o podría ser el idCategoria, dependiendo de la lógica del backend
+          unidades: 1
+        });
+      }
+
+      // Construir el payload según el DTO
       const payload = {
         nombre: formData.nombre.trim(),
         apellido: formData.apellido.trim(),
-        domicilio: formData.domicilio || "",
-        cuil: formData.cuil || "",
+        cuil: formData.cuil || null,
+        inicioActividad: formData.inicioActividad ? new Date(formData.inicioActividad).toISOString().split('T')[0] : null,
+        domicilio: formData.domicilio || null,
+        banco: formData.banco || null,
+        idCategoria: formData.idCategoria ? Number(formData.idCategoria) : null,
+        idAreas: formData.areas && formData.areas.length > 0 ? formData.areas.map(a => Number(a)) : null,
+        sexo: formData.sexo || null,
+        idGremio: formData.gremioId ? Number(formData.gremioId) : null,
+        idZona: formData.zonaId ? Number(formData.zonaId) : null,
         estado: "ACTIVO",
-        idGremio: Number(formData.gremioId), // Objeto gremio con ID
-        idCategoria: Number(formData.idCategoria),
-        banco: formData.banco || "",
-        sexo: formData.sexo || "",
-        inicioActividad: new Date(formData.inicioActividad).toISOString().split("T")[0], // "YYYY-MM-DD"
-        idAreas: formData.areas.map((a) => Number(a)), // Array de IDs numéricos
+        conceptosAsignados: conceptosAsignados.length > 0 ? conceptosAsignados : null
       };
+      console.log('Payload enviado:', payload);
 
-      // Si gremio es UOCRA y tiene zona, agregar idZona
-      if (formData.gremio === "UOCRA" && formData.zonaId) {
-        payload.idZona = Number(formData.zonaId);
-      }
       // Llama al callback onSave si está definido
       if (onSave) await onSave(payload, false);
       handleClose();
@@ -335,9 +608,22 @@ export function NewEmployeeModal({ isOpen, onClose, onSave }) {
       ...prev,
       gremio: value,
       gremioId: GREMIOS[value] || null, // <-- asigna el id correcto
+      idCategoria: null, // limpia categoría al cambiar gremio
+      categoria: '', // limpia nombre de categoría
+      salary: '', // limpia salario básico
       areas: [], // limpia áreas al cambiar gremio
       zonaId: null, // limpia zona al cambiar gremio
+      bonoArea: 0, // limpia bono de área al cambiar gremio
     }));
+    // Limpiar conceptos seleccionados al cambiar gremio
+    setConceptosSeleccionados({});
+    // Limpiar errores relacionados
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors.categoria;
+      delete newErrors.areas;
+      return newErrors;
+    });
   };
 
   // Maneja el cierre del modal y resetea el formulario
@@ -349,15 +635,61 @@ export function NewEmployeeModal({ isOpen, onClose, onSave }) {
       idAreas: [],
       inicioActividad: new Date().toISOString().split('T')[0],
       estado: 'ACTIVO',
+      gremio: null,
       idGremio: null,
       idCategoria: null,
       idZona: null,
       banco: '',
       cuil: '',
       sexo: 'M',
+      salary: '',
+      bonoArea: 0
     });
     setErrors({});
+    setConceptosSeleccionados({});
     onClose();
+  };
+
+  // Calcula el total de un concepto basado en el básico, porcentaje y unidades
+  const calculateConceptTotal = (concepto, units) => {
+    if (!concepto || !units || units <= 0) return 0;
+    if (!formData.salary || !concepto.porcentaje) return 0;
+    
+    const basico = Number(formData.salary) || 0;
+    const porcentaje = Number(concepto.porcentaje) || 0;
+    const unidades = Number(units) || 0;
+    const isDescuento = concepto.isDescuento || concepto.tipo === 'DESCUENTO';
+    
+    // Total = (básico * porcentaje / 100) * unidades
+    // Si es descuento, el total es negativo
+    const montoUnitario = (basico * porcentaje) / 100;
+    const total = montoUnitario * unidades;
+    console.log('total', total);
+    return isDescuento ? -total : total;
+  };
+
+  // Calcula el salario total estipulado inicial
+  const calculateTotalSalary = () => {
+    const salarioBasico = Number(formData.salary) || 0;
+    const bonoArea = formData.gremio === 'LUZ_Y_FUERZA' ? (Number(formData.bonoArea) || 0) : 0;
+    
+    // Sumar todos los conceptos adicionales seleccionados (incluyendo descuentos que son negativos)
+    const totalConceptos = Object.keys(conceptosSeleccionados).reduce((sum, conceptId) => {
+      // conceptId ahora puede ser 'BON_X' o 'DESC_X'
+      const concepto = conceptos.find(c => c.id === conceptId);
+      if (!concepto) return sum;
+      const units = conceptosSeleccionados[conceptId]?.units ?? '';
+      const unitsNum = Number(units);
+      if (!unitsNum || unitsNum <= 0) return sum;
+      
+      // Calcular total del concepto
+      const total = calculateConceptTotal(concepto, unitsNum);
+      
+      // Los descuentos ya vienen negativos de calculateConceptTotal, así que se restan al sumar
+      return sum + total;
+    }, 0);
+    
+    return salarioBasico + bonoArea + totalConceptos;
   };
 
   // Maneja el toggle de selección de conceptos adicionales
@@ -367,7 +699,7 @@ export function NewEmployeeModal({ isOpen, onClose, onSave }) {
       if (next[conceptId]) {
         delete next[conceptId];
       } else {
-        next[conceptId] = { units: '' };
+        next[conceptId] = { units: '1' }; // Iniciar con 1 unidad
       }
       return next;
     });
@@ -386,7 +718,7 @@ export function NewEmployeeModal({ isOpen, onClose, onSave }) {
       isOpen={isOpen}
       onClose={handleClose}
       title="Agregar Nuevo Empleado"
-      size="large"
+      size="medium"
       className="new-employee-modal"
     >
       <form onSubmit={handleSubmit} className="employee-form">
@@ -508,18 +840,31 @@ export function NewEmployeeModal({ isOpen, onClose, onSave }) {
             <div className={'form-group'}>
               <label className={'form-label'}>Salario Básico *</label>
               <input
-                type="number"
+                type="text"
                 className={`${'form-input'} ${errors.salary ? 'error' : ''}`}
-                value={formData.salary ?? ''} 
+                value={formData.salary ? formatCurrencyAR(formData.salary) : ''} 
                 placeholder="—"
-                min="0"
-                step="1"
                 disabled
                 readOnly
                 title="Este valor se establece por la categoría seleccionada"
               />
               {errors.salary && <span className="error-message">{errors.salary}</span>}
             </div>
+
+            {formData.gremio === 'LUZ_Y_FUERZA' && (
+              <div className={'form-group'}>
+                <label className={'form-label'}>Bono de Área</label>
+                <input
+                  type="text"
+                  className={'form-input'}
+                  value={formData.bonoArea ? formatCurrencyAR(formData.bonoArea) : ''} 
+                  placeholder="—"
+                  disabled
+                  readOnly
+                  title="Este valor se calcula automáticamente según las áreas seleccionadas y el básico de categoría 11"
+                />
+              </div>
+            )}
 
             {/* Áreas o Zonas */}
             <div className="form-group">
@@ -532,12 +877,15 @@ export function NewEmployeeModal({ isOpen, onClose, onSave }) {
                 <select
                   className="form-select"
                   value={formData.zonaId || ""}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      zonaId: e.target.value ? Number(e.target.value) : null,
-                    })
-                  }
+                  onChange={(e) => {
+                    const newZonaId = e.target.value ? Number(e.target.value) : null;
+                    setFormData(prev => ({
+                      ...prev,
+                      zonaId: newZonaId,
+                      // Si se deselecciona la zona, limpiar salario
+                      salary: !newZonaId ? '' : prev.salary
+                    }));
+                  }}
                   disabled={!areasHabilitadas}
                 >
                   <option value="">Seleccionar zona</option>
@@ -550,25 +898,6 @@ export function NewEmployeeModal({ isOpen, onClose, onSave }) {
               ) : (
                 // 🔹 Caso general: múltiples áreas con chips y botón "+"
                 <>
-                  <div className="area-chips">
-                    {(formData.areas || []).map((id, idx) => {
-                      const ref = areas.find((a) => a.idArea === Number(id));
-                      return (
-                        <span key={idx} className="area-chip">
-                          {ref ? ref.nombre : `Área #${id}`}
-                          <button
-                            type="button"
-                            className="chip-remove"
-                            onClick={() => removeArea(id)}
-                            disabled={!areasHabilitadas}
-                          >
-                            –
-                          </button>
-                        </span>
-                      );
-                    })}
-                  </div>
-
                   <div className="area-actions" style={{ display: "flex", gap: 8 }}>
                     <select
                       className="form-select"
@@ -599,6 +928,28 @@ export function NewEmployeeModal({ isOpen, onClose, onSave }) {
                       +
                     </button>
                   </div>
+
+                  {/* Chips de áreas seleccionadas debajo del desplegable */}
+                  {(formData.areas || []).length > 0 && (
+                    <div className="area-chips" style={{ marginTop: '8px' }}>
+                      {(formData.areas || []).map((id, idx) => {
+                        const ref = areas.find((a) => a.idArea === Number(id));
+                        return (
+                          <span key={idx} className="area-chip">
+                            {ref ? ref.nombre : `Área #${id}`}
+                            <button
+                              type="button"
+                              className="chip-remove"
+                              onClick={() => removeArea(id)}
+                              disabled={!areasHabilitadas}
+                            >
+                              –
+                            </button>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
                 </>
               )}
 
@@ -623,36 +974,94 @@ export function NewEmployeeModal({ isOpen, onClose, onSave }) {
           </div>
         </div>
         {/* Conceptos Adicionales */}
-        <div className="form-section conceptos-section">
-          <h3 className="section-title">
-            <ListChecks className="title-icon" />
-            Conceptos Adicionales
-          </h3>
-          <div className="conceptos-list">
-            {conceptos.map((concepto) => (
-              <div key={concepto.id} className="concepto-item">
-                <div className="checkbox-container">
-                  <input
-                    type="checkbox"
-                    id={`concepto-${concepto.id}`}
-                    checked={!!conceptosSeleccionados[concepto.id]}
-                    onChange={() => handleConceptToggle(concepto.id)}
-                  />
-                  <label htmlFor={`concepto-${concepto.id}`}>{concepto.nombre}</label>
-                </div>
-                <div className="units-input">
-                  <label htmlFor={`units-${concepto.id}`}>Unidades:</label>
-                  <input
-                    type="number"
-                    id={`units-${concepto.id}`}
-                    value={(conceptosSeleccionados[concepto.id]?.units ?? '')}
-                    onChange={(e) => handleUnitsChange(concepto.id, e.target.value)}
-                    min="0"
-                    disabled={!conceptosSeleccionados[concepto.id]}
-                  />
-                </div>
+        {formData.gremio && formData.gremio !== "Convenio General" && (
+          <div className="form-section conceptos-section">
+            <h3 className="section-title">
+              <ListChecks className="title-icon" />
+              Conceptos Adicionales
+            </h3>
+            {conceptos.length === 0 ? (
+              <p className="conceptos-empty-message">
+                {formData.gremio === 'LUZ_Y_FUERZA' 
+                  ? 'No hay conceptos disponibles para Luz y Fuerza' 
+                  : 'No hay conceptos disponibles para UOCRA aún'}
+              </p>
+            ) : (
+              <div className="conceptos-table">
+                <table className="conceptos-table-content">
+                  <thead>
+                    <tr>
+                      <th>Seleccionar</th>
+                      <th>Concepto</th>
+                      <th>Porcentaje</th>
+                      <th>Unidades</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {conceptos.map((concepto) => {
+                      const isSelected = !!conceptosSeleccionados[concepto.id];
+                      const units = conceptosSeleccionados[concepto.id]?.units ?? '';
+                      const isDescuento = concepto.isDescuento || concepto.tipo === 'DESCUENTO';
+                      
+                      // Calcular total solo si está seleccionado y tiene unidades válidas
+                      const total = isSelected && units && Number(units) > 0 
+                        ? calculateConceptTotal(concepto, Number(units))
+                        : 0;
+                      
+                      return (
+                        <tr key={concepto.id} className={`${isSelected ? 'selected' : ''} ${isDescuento ? 'descuento-row' : ''}`}>
+                          <td>
+                            <input
+                              type="checkbox"
+                              id={`concepto-${concepto.id}`}
+                              checked={isSelected}
+                              onChange={() => handleConceptToggle(concepto.id)}
+                            />
+                          </td>
+                          <td>
+                            <label htmlFor={`concepto-${concepto.id}`} className="concepto-label">
+                              {concepto.nombre}
+                            </label>
+                          </td>
+                          <td className="porcentaje-cell">
+                            {concepto.porcentaje ? `${concepto.porcentaje}%` : '-'}
+                          </td>
+                          <td>
+                            <input
+                              type="number"
+                              id={`units-${concepto.id}`}
+                              value={units}
+                              onChange={(e) => handleUnitsChange(concepto.id, e.target.value)}
+                              min="0"
+                              step="1"
+                              disabled={!isSelected}
+                              className="units-input-field"
+                            />
+                          </td>
+                          <td className={`total-cell ${isDescuento ? 'descuento-total' : ''}`}>
+                            {isSelected && units && total !== 0 
+                              ? formatCurrencyAR(total)
+                              : '-'
+                            }
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
-            ))}
+            )}
+          </div>
+        )}
+
+        {/* Resumen del Salario Total */}
+        <div className="form-section salary-summary-section">
+          <div className="salary-summary">
+            <label className="salary-summary-label">Salario Estipulado Inicial</label>
+            <div className="salary-summary-total">
+              {formatCurrencyAR(calculateTotalSalary())}
+            </div>
           </div>
         </div>
 

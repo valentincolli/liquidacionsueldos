@@ -19,66 +19,44 @@
     }
   }
 
-  .stats-grid {
+  .stats-overview {
     display: grid;
     grid-template-columns: repeat(1, minmax(0, 1fr));
-    gap: $spacing-6;
-    margin-bottom: $spacing-8;
+    gap: $spacing-4;
+    margin-bottom: $spacing-6;
 
     @media (min-width: 768px) {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    @media (min-width: 1024px) {
       grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 
     .stat-card {
-      background-color: $color-white;
-      border: 1px solid $color-gray-200;
-      border-radius: $border-radius-lg;
-      box-shadow: $shadow-sm;
+      padding: $spacing-4;
 
-      .stat-header {
-        padding: $spacing-4;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        border-bottom: none;
+      .stat-value {
+        font-size: $font-size-2xl;
+        font-weight: 700;
+        margin-bottom: $spacing-1;
 
-        .stat-title {
-          font-size: $font-size-sm;
-          font-weight: 500;
-          color: $color-gray-700;
+        &.success {
+          color: $color-success;
         }
 
-        .stat-icon {
-          width: 1rem;
-          height: 1rem;
-          color: $color-gray-400;
+        &.primary {
+          color: $color-green-primary;
+        }
+
+        &.warning {
+          color: $color-warning;
+        }
+
+        &.default {
+          color: $color-gray-900;
         }
       }
 
-      .stat-content {
-        padding: 0 $spacing-4 $spacing-4;
-
-        .stat-value {
-          font-size: $font-size-2xl;
-          font-weight: 700;
-          margin-bottom: $spacing-1;
-        }
-
-        .stat-change {
-          font-size: $font-size-xs;
-
-          &.positive {
-            color: $color-success;
-          }
-
-          &.negative {
-            color: $color-warning;
-          }
-        }
+      .stat-label {
+        font-size: $font-size-sm;
+        color: $color-gray-500;
       }
     }
   }

@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Users, FileText, Calculator, TrendingUp, DollarSign, Clock } from 'lucide-react';
 import '../styles/components/_dashboard.scss';
 import * as api from '../services/empleadosAPI'
+import { ProcessPayrollModal } from '../Components/ProcessPayrollModal/ProcessPayrollModal';
+import { NewEmployeeModal } from '../Components/NewEmployeeModal/NewEmployeeModal';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [activeEmployees, setActiveEmployees] = useState();
   const [gremiosCount, setGremiosCount] = useState();
-
-  useEffect(() => {
-    countActiveEmployees();
-    countGremios();
-  }, []);
+  const [showProcessModal, setShowProcessModal] = useState(false);
+  const [showNewEmployeeModal, setShowNewEmployeeModal] = useState(false);
+  const [employees, setEmployees] = useState([]);
 
   const countActiveEmployees = async () => {
     try {
@@ -30,26 +32,67 @@ export default function Dashboard() {
     }
   };
 
+  const loadEmployees = async () => {
+    try {
+      const data = await api.getEmployees();
+      const ordenados = data.sort((a, b) => a.legajo - b.legajo);
+      setEmployees(ordenados);
+    } catch (error) {
+      console.error('Error al cargar los empleados:', error);
+    }
+  };
+
+  useEffect(() => {
+    countActiveEmployees();
+    countGremios();
+    loadEmployees();
+  }, []);
+
+  const handleProcessPayroll = (result) => {
+    console.log('Procesamiento completado:', result);
+    // Puedes agregar lógica adicional aquí si es necesario
+    countActiveEmployees(); // Refrescar conteo
+  };
+
+  const handleSaveEmployee = async (dto, isEdit) => {
+    try {
+      if (isEdit) {
+        await api.updateEmployee(dto.legajo, dto);
+      } else {
+        await api.createEmployee(dto);
+      }
+      await loadEmployees(); // Refrescar lista
+      await countActiveEmployees(); // Refrescar conteo
+      setShowNewEmployeeModal(false);
+    } catch (err) {
+      alert("Error al registrar empleado: " + err.message);
+    }
+  };
+
   const stats = [
     {
       title: 'Total Empleados Activos',
       value: activeEmployees || 'Cargando...',
       icon: Users,
+      colorClass: 'success',
     },
     {
       title: 'Liquidaciones Pendientes',
       value: '8',
       icon: Clock,
+      colorClass: 'warning',
     },
     {
       title: 'Monto Total Mensual',
       value: '$2,847,500',
       icon: DollarSign,
+      colorClass: 'primary',
     },
     {
       title: 'Convenios Activos',
       value: gremiosCount || 'Cargando...',
       icon: FileText,
+      colorClass: 'default',
     }
   ];
 
@@ -97,20 +140,14 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="stats-grid">
+      <div className="stats-overview">
         {stats.map((stat) => {
-          const Icon = stat.icon;
           return (
             <div key={stat.title} className="card stat-card">
-              <div className="stat-header">
-                <h3 className="stat-title">
-                  {stat.title}
-                </h3>
-                <Icon className="stat-icon" />
+              <div className={`stat-value ${stat.colorClass}`}>
+                {stat.value}
               </div>
-              <div className="stat-content">
-                <div className="stat-value">{stat.value}</div>
-              </div>
+              <p className="stat-label">{stat.title}</p>
             </div>
           );
         })}
@@ -164,11 +201,17 @@ export default function Dashboard() {
           </div>
           <div className="card-content">
             <div className="actions-list">
-              <button className="action-btn primary">
+              <button 
+                className="action-btn primary"
+                onClick={() => setShowProcessModal(true)}
+              >
                 <span>Nueva Liquidación</span>
                 <Calculator className="action-icon" />
               </button>
-              <button className="action-btn success">
+              <button 
+                className="action-btn success"
+                onClick={() => setShowNewEmployeeModal(true)}
+              >
                 <span>Agregar Empleado</span>
                 <Users className="action-icon" />
               </button>
@@ -176,7 +219,10 @@ export default function Dashboard() {
                 <span>Ver Reportes</span>
                 <TrendingUp className="action-icon" />
               </button>
-              <button className="action-btn secondary">
+              <button 
+                className="action-btn secondary"
+                onClick={() => navigate('/convenios')}
+              >
                 <span>Gestionar Convenios</span>
                 <FileText className="action-icon" />
               </button>
@@ -184,6 +230,19 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Modales */}
+      <ProcessPayrollModal
+        isOpen={showProcessModal}
+        onClose={() => setShowProcessModal(false)}
+        onProcess={handleProcessPayroll}
+        employees={employees}
+      />
+      <NewEmployeeModal
+        isOpen={showNewEmployeeModal}
+        onClose={() => setShowNewEmployeeModal(false)}
+        onSave={handleSaveEmployee}
+      />
     </div>
   );
 }
