@@ -5,6 +5,7 @@ import './Liquidacion.scss'
 import { ProcessPayrollModal } from '../../Components/ProcessPayrollModal/ProcessPayrollModal';
 import { Modal, ModalFooter } from '../../Components/Modal/Modal';
 import '../../Components/ProcessPayrollModal/ProcessPayrollModal.scss';
+import { useNavigate } from 'react-router-dom';
 
 // Mock data for recent individual payrolls
 const recentPayrolls = [
@@ -91,6 +92,7 @@ const recentPayrolls = [
 ];
 
 export default function Liquidacion() {
+  const navigate = useNavigate();
   const [showProcessModal, setShowProcessModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showReportsModal, setShowReportsModal] = useState(false);
@@ -112,6 +114,10 @@ export default function Liquidacion() {
   const handlePrintPayroll = (payroll) => {
     console.log('Imprimiendo liquidación:', payroll.periodName);
     window.print();
+  };
+
+  const handleViewHistorial = () => {
+    navigate('/liquidacion-historial');
   };
 
   const handleDownloadPayroll = (payroll) => {
@@ -240,76 +246,62 @@ export default function Liquidacion() {
           ) : (
             <div className="payroll-grid">
               {filteredPayrolls.map((payroll) => (
-              <div key={payroll.id} className="payroll-card employee-payroll">
-                <div className="payroll-header">
-                  <div className="employee-info">
-                    <Users className="employee-icon" />
-                    <div className="employee-details">
-                      <span className="employee-name">{payroll.employeeName}</span>
-                      <span className="employee-position">{payroll.position}</span>
-                      <span className="employee-department">{payroll.department}</span>
+                <div key={payroll.id} className="payroll-card employee-payroll compact">
+                  <div className="compact-payroll-header">
+                    <div className="compact-employee">
+                      <Users className="employee-icon" />
+                      <div className="employee-details">
+                        <span className="employee-name">{payroll.employeeName}</span>
+                        <span className="payroll-period">{payroll.periodName}</span>
+                      </div>
+                    </div>
+                    <div className={`payroll-status ${payroll.status.toLowerCase()}`}>
+                      {payroll.status}
                     </div>
                   </div>
-                  <div className={`payroll-status ${payroll.status.toLowerCase()}`}>
-                    {payroll.status}
-                  </div>
-                </div>
 
-                <div className="salary-breakdown">
-                  <div className="salary-item">
-                    <span className="salary-label">Básico:</span>
-                    <span className="salary-value">${payroll.basicSalary.toLocaleString()}</span>
-                  </div>
-                  <div className="salary-item bonification">
-                    <span className="salary-label">Bonificaciones:</span>
-                    <span className="salary-value">+${payroll.bonifications.toLocaleString()}</span>
-                  </div>
-                  <div className="salary-item deduction">
-                    <span className="salary-label">Descuentos:</span>
-                    <span className="salary-value">-${payroll.deductions.toLocaleString()}</span>
-                  </div>
-                  <div className="salary-item total">
-                    <span className="salary-label">Neto:</span>
-                    <span className="salary-value">${payroll.netSalary.toLocaleString()}</span>
-                  </div>
-                </div>
-
-                <div className="payroll-period-info">
-                  <div className="period-detail">
-                    <Calendar className="period-icon" />
-                    <span>{payroll.periodName}</span>
-                  </div>
-                  {payroll.paymentDate && (
-                    <div className="payment-date">
-                      Pago: {new Date(payroll.paymentDate).toLocaleDateString('es-ES')}
+                  <div className="compact-payroll-body">
+                    <div className="net-amount">
+                      <span className="label">Neto</span>
+                      <span className="value">${payroll.netSalary.toLocaleString()}</span>
                     </div>
-                  )}
-                </div>
+                    <div className="payment-summary">
+                      <Calendar className="period-icon" />
+                      <div className="payment-details">
+                        <span className="label">Pago</span>
+                        <span className="value">
+                          {payroll.paymentDate
+                            ? new Date(payroll.paymentDate).toLocaleDateString('es-ES')
+                            : 'Pendiente'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
-                <div className="payroll-actions">
-                  <button
-                    className="action-btn view"
-                    onClick={() => handleViewDetails(payroll)}
-                    title="Ver detalles"
-                  >
-                    <Eye className="action-icon" />
-                  </button>
-                  <button
-                    className="action-btn print"
-                    onClick={() => handlePrintPayroll(payroll)}
-                    title="Imprimir recibo"
-                  >
-                    <Printer className="action-icon" />
-                  </button>
-                  <button
-                    className="action-btn download"
-                    onClick={() => handleDownloadPayroll(payroll)}
-                    title="Descargar recibo"
-                  >
-                    <Download className="action-icon" />
-                  </button>
+                  <div className="payroll-actions">
+                    <button
+                      className="action-btn view"
+                      onClick={() => handleViewDetails(payroll)}
+                      title="Ver detalles"
+                    >
+                      <Eye className="action-icon" />
+                    </button>
+                    <button
+                      className="action-btn print"
+                      onClick={() => handlePrintPayroll(payroll)}
+                      title="Imprimir recibo"
+                    >
+                      <Printer className="action-icon" />
+                    </button>
+                    <button
+                      className="action-btn download"
+                      onClick={() => handleDownloadPayroll(payroll)}
+                      title="Descargar recibo"
+                    >
+                      <Download className="action-icon" />
+                    </button>
+                  </div>
                 </div>
-              </div>
               ))}
             </div>
           )}
@@ -333,7 +325,7 @@ export default function Liquidacion() {
                 <span>Generar Reportes</span>
                 <TrendingUp className="action-icon" />
               </button>
-              <button className="action-btn warning">
+              <button className="action-btn warning" onClick={handleViewHistorial}>
                 <span>Historial</span>
                 <History className="action-icon" />
               </button>

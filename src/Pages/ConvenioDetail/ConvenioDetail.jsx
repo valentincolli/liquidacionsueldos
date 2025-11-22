@@ -340,7 +340,7 @@ export default function ConvenioDetail() {
                 <tr>
                   <th rowSpan="2">CAT</th>
                   <th rowSpan="2">SUELDO BÁSICO</th>
-                  <th colSpan="5">BONIFICACIONES</th>
+                  <th colSpan="6">BONIFICACIONES</th>
                 </tr>
                 <tr>
                   <th>OFICIO</th>

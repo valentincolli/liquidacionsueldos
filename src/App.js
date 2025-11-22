@@ -6,6 +6,7 @@ import Employees from './Pages/Employees/Employees.jsx';
 import Convenios from './Pages/Convenios/Convenios';
 import ConvenioDetail from './Pages/ConvenioDetail/ConvenioDetail';
 import Sidebar from './Components/Sidebar/Sidebar.jsx';
+import LiquidacionHistorial from './Pages/Liquidaciones/LiquidacionHistorial.jsx';
 import './main.scss';
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
               <Route path="/convenios" element={<Convenios/>}/>
               <Route path="/convenios/:id" element={<ConvenioDetail/>}/>
               <Route path="/liquidacion" element={<Liquidaciones/>}/>
+              <Route path="/liquidacion-historial" element={<LiquidacionHistorial/>}/>
             </Routes>
         </main>
       </div>
