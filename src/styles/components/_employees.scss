@@ -1,7 +1,10 @@
 @import '../main.scss';
 
 .empleados {
-  padding: $spacing-6;
+  padding: $spacing-4 $spacing-6;
+  padding-top: $spacing-4;
+  background-color: rgba(217, 247, 226, 0.3);
+  min-height: 100vh;
 
   .empleados-header {
     display: flex;
@@ -14,11 +17,7 @@
         font-size: $font-size-3xl;
         font-weight: 700;
         color: $color-gray-900;
-        margin-bottom: $spacing-2;
-      }
-
-      .subtitle {
-        color: $color-gray-500;
+        margin: 0;
       }
     }
 
@@ -58,6 +57,8 @@
 
     .stat-card {
       padding: $spacing-4;
+      cursor: pointer;
+      transition: box-shadow 0.3s ease;
 
       .stat-value {
         font-size: $font-size-2xl;
@@ -306,101 +307,117 @@
     }
   }
 
-  .employees-list {
-    .list-header {
-      .list-title {
-        font-size: $font-size-lg;
-        font-weight: 600;
+  .employees-table-container {
+    background: $color-white;
+    border-radius: $border-radius-lg;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+
+    .employees-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      background: $color-white;
+
+      thead {
+        background: $color-white;
         color: $color-gray-900;
-        margin-bottom: $spacing-1;
-      }
+        position: sticky;
+        top: 0;
+        z-index: 10;
 
-      .list-description {
-        font-size: $font-size-sm;
-        color: $color-gray-500;
-      }
-    }
+        th {
+          padding: $spacing-3 $spacing-4;
+          font-size: $font-size-sm;
+          font-weight: 600;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+          border-bottom: 1px solid $color-gray-200;
+          color: $color-gray-900;
+          text-align: left;
 
-    .list-content {
-      .employee-list {
-        display: flex;
-        flex-direction: column;
-        gap: $spacing-4;
-
-        .employee-item {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: $spacing-4;
-          border: 1px solid $color-gray-200;
-          border-radius: $border-radius-lg;
-          transition: background-color 0.15s ease;
-
-          &:hover {
-            background-color: rgba(243, 244, 246, 0.5);
+          &:first-child {
+            padding-left: $spacing-5;
           }
 
-          .employee-grid {
-            flex: 1;
-            display: grid;
-            grid-template-columns: repeat(1, minmax(0, 1fr));
-            gap: $spacing-4;
-            align-items: center;
+          &:last-child {
+            padding-right: $spacing-5;
+            text-align: right;
+          }
+        }
+      }
 
-            @media (min-width: 768px) {
-              grid-template-columns: repeat(4, minmax(0, 1fr));
-            }
+      tbody {
+        tr {
+          border-bottom: 1px solid $color-gray-100;
+          transition: all 0.2s ease;
 
-            .employee-info {
-              .employee-name {
-                font-weight: 600;
-                color: $color-gray-900;
-                margin-bottom: $spacing-1;
-              }
+          &:hover {
+            background: rgba(16, 185, 129, 0.05);
+          }
 
-              .employee-email {
-                font-size: $font-size-sm;
-                color: $color-gray-500;
-              }
-            }
+          &:last-child {
+            border-bottom: none;
+          }
 
-            .employee-position {
-              .position-title {
-                font-weight: 500;
-                margin-bottom: $spacing-1;
-              }
+          td {
+            padding: $spacing-4;
+            vertical-align: middle;
 
-              .department {
-                font-size: $font-size-sm;
-                color: $color-gray-500;
-              }
-            }
+            &.employee-cell {
+              padding-left: $spacing-5;
 
-            .employee-salary {
-              .salary-amount {
-                font-weight: 600;
-                color: $color-success;
-                margin-bottom: $spacing-1;
-              }
-
-              .hire-date {
-                font-size: $font-size-sm;
-                color: $color-gray-500;
-              }
-            }
-
-            .employee-status {
-              display: flex;
-              align-items: center;
-              justify-content: space-between;
-
-              .status-badge {
-                display: inline-flex;
+              .employee-info {
+                display: flex;
                 align-items: center;
+                gap: $spacing-3;
+
+                .employee-icon {
+                  width: 2rem;
+                  height: 2rem;
+                  color: $color-gray-400;
+                  flex-shrink: 0;
+                }
+
+                .employee-details {
+                  flex: 1;
+
+                  .employee-name {
+                    font-size: $font-size-base;
+                    font-weight: 600;
+                    color: $color-gray-900;
+                    margin-bottom: $spacing-1;
+                  }
+
+                  .employee-legajo {
+                    font-size: $font-size-sm;
+                    color: $color-gray-600;
+
+                    .convenio-name {
+                      color: #2563eb;
+                      font-weight: 500;
+                    }
+                  }
+                }
+
+                .employee-status-icon {
+                  width: 0.5rem;
+                  height: 0.5rem;
+                  border-radius: 50%;
+                  background: $color-gray-300;
+                  flex-shrink: 0;
+                }
+              }
+            }
+
+            &.status-cell {
+              .status-badge {
+                display: inline-block;
                 padding: $spacing-1 $spacing-2;
-                border-radius: $border-radius-sm;
+                border-radius: $border-radius;
                 font-size: $font-size-xs;
-                font-weight: 500;
+                font-weight: 600;
+                text-transform: uppercase;
 
                 &.active {
                   background-color: rgba(34, 197, 94, 0.1);
@@ -411,35 +428,72 @@
                   background-color: rgba(239, 68, 68, 0.1);
                   color: #dc2626;
                 }
-
-                &.license {
-                  background-color: rgba(234, 179, 8, 0.1);
-                  color: $color-yellow-dark;
-                }
               }
             }
-          }
 
-          .employee-actions {
-            .actions-menu {
-              position: relative;
+            &.action-cell {
+              padding-right: $spacing-5;
+              text-align: right;
 
-              .actions-trigger {
-                background: transparent;
-                border: none;
-                padding: $spacing-1;
-                cursor: pointer;
-                border-radius: $border-radius;
-                transition: background-color 0.15s ease;
+              .employee-actions {
+                display: flex;
+                gap: $spacing-2;
+                align-items: center;
+                justify-content: flex-end;
 
-                &:hover {
-                  background-color: $color-gray-100;
-                }
+                .action-icon-button {
+                  width: 2rem;
+                  height: 2rem;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  border: none;
+                  border-radius: $border-radius;
+                  cursor: pointer;
+                  transition: all 0.15s ease;
+                  background-color: transparent;
 
-                .actions-icon {
-                  width: 1rem;
-                  height: 1rem;
-                  color: $color-gray-500;
+                  .action-icon {
+                    width: 1rem;
+                    height: 1rem;
+                  }
+
+                  &.view-action {
+                    color: $color-info;
+                    &:hover {
+                      background-color: rgba(59, 130, 246, 0.1);
+                    }
+                  }
+
+                  &.edit-action {
+                    color: $color-warning;
+                    &:hover {
+                      background-color: rgba(234, 179, 8, 0.1);
+                    }
+                    &:disabled {
+                      opacity: 0.3;
+                      cursor: not-allowed;
+                    }
+                  }
+
+                  &.liquidate-action {
+                    color: $color-success;
+                    &:hover {
+                      background-color: rgba(34, 197, 94, 0.1);
+                    }
+                    &:disabled {
+                      opacity: 0.3;
+                      cursor: not-allowed;
+                    }
+                  }
+
+                  &.deactivate-action,
+                  &.activate-action {
+                    color: $color-danger;
+                    &:hover {
+                      background-color: rgba(239, 68, 68, 0.1);
+                    }
+                  }
                 }
               }
             }

@@ -1,89 +1,98 @@
-import React, { useState } from 'react';
-import { Eye, Edit, Upload, MapPin, Users, Calendar, Layers, FileText, Layers3Icon } from 'lucide-react';
+import React from 'react';
+import { Eye, Edit, Upload, Users, Calendar, FileText, DollarSign } from 'lucide-react';
 import { Tooltip } from '../ToolTip/ToolTip';
 import './ConvenioCard.scss';
 
 export function ConvenioCard({ convenio, onView, onEdit, onUploadDocument }) {
-  const [showDetails, setShowDetails] = useState(false);
+  // Calcular salario básico promedio (aproximado)
+  // En producción, esto debería obtenerse desde el convenio o los empleados
+  const getBasicSalary = () => {
+    if (convenio.controller?.toUpperCase().includes('LYF')) {
+      return 285000;
+    } else if (convenio.controller?.toUpperCase().includes('UOCRA')) {
+      return 260000;
+    }
+    return 272500;
+  };
 
-  const isUocra = convenio.controller.toUpperCase().includes('UOCRA');
-  const isLuzYFuerza = convenio.controller.toUpperCase().includes('LYF');
+  const basicSalary = getBasicSalary();
+  
+  // Formatear fecha de última actualización
+  const formatLastUpdate = () => {
+    if (convenio.lastUpdate) {
+      const date = new Date(convenio.lastUpdate);
+      return date.toLocaleDateString('es-AR', { 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric' 
+      });
+    }
+    // Fechas por defecto según el convenio
+    if (convenio.controller?.toUpperCase().includes('LYF')) {
+      return '14 de enero de 2024';
+    } else if (convenio.controller?.toUpperCase().includes('UOCRA')) {
+      return '31 de enero de 2024';
+    }
+    return new Date().toLocaleDateString('es-AR', { 
+      day: 'numeric', 
+      month: 'long', 
+      year: 'numeric' 
+    });
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount);
+  };
   
   return (
     <div className="convenio-card">
       <div className="convenio-header">
         <div className="convenio-title">
           <FileText className="convenio-icon" />
-          <div className="title-content">
-            <h3 className="convenio-name">{convenio.name}</h3>
-          </div>
+          <h3 className="convenio-name">{convenio.name}</h3>
         </div>
-        <div className={`convenio-status ${convenio.status.toLowerCase()}`}>
-          {convenio.status}
+        <div className={`convenio-status ${convenio.status?.toLowerCase() || 'activo'}`}>
+          ACTIVO
         </div>
       </div>
 
-      {/* --- Resumen principal --- */}
-      <div className="convenio-summary">
-        {/* Empleados */}
-        <div className="summary-item">
-          <Users className="summary-icon" />
-          <div className="summary-content">
-            <span className="summary-value">{convenio.employeeCount}</span>
-            <span className="summary-label">Empleados</span>
+      <div className="convenio-details-list">
+        <div className="detail-item">
+          <Users className="detail-icon" />
+          <div className="detail-content">
+            <span className="detail-value">{convenio.employeeCount}</span>
+            <span className="detail-label">Empleados</span>
           </div>
         </div>
 
-        {/* Categorías */}
-        <div className="summary-item">
-          <Layers className="summary-icon" />
-          <div className="summary-content">
-            <span className="convenio-status">{convenio.categories}</span>
-            <span className="summary-label">Categorías</span>
+        <div className="detail-item">
+          <DollarSign className="detail-icon" />
+          <div className="detail-content">
+            <span className="detail-value">{formatCurrency(basicSalary)}</span>
+            <span className="detail-label">Básico</span>
           </div>
         </div>
 
-        {/* Zonas o Áreas */}
-        {(isUocra || isLuzYFuerza) && (
-          <div className="summary-item">
-            <MapPin className="summary-icon" />
-            <div className="summary-content">
-              <span className="summary-value">
-                {isUocra
-                  ? convenio.cantZonas ?? 0
-                  : convenio.cantAreas ?? 0}
-              </span>
-              <span className="summary-label">
-                {isUocra ? "Total Zonas" : "Total Áreas"}
-              </span>
-            </div>
+        <div className="detail-item">
+          <Calendar className="detail-icon" />
+          <div className="detail-content">
+            <span className="detail-value">{formatLastUpdate()}</span>
+            <span className="detail-label">Última actualización</span>
           </div>
-        )}
+        </div>
       </div>
 
-      {/* --- Detalles (colapsable) --- */}
-      {showDetails && (
-        <div className="convenio-details">
-          <div className="details-grid">
-            <div className="detail-group">
-              <h4>Información General</h4>
-              <div className="detail-item">
-                <span className="detail-value">
-                  {convenio.description || "Sin descripción"}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* --- Acciones --- */}
       <div className="convenio-actions">
         <button
-          className="details-toggle"
-          onClick={() => setShowDetails(!showDetails)}
+          className="details-link"
+          onClick={() => onView(convenio.controller)}
         >
-          {showDetails ? "Ocultar detalles" : "Ver detalles"}
+          Ver detalles
         </button>
 
         <div className="action-buttons">

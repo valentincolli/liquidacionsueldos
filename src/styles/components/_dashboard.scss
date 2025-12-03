@@ -1,10 +1,13 @@
 @import '../main.scss';
 
 .dashboard {
-  padding: $spacing-6;
+  padding: $spacing-4 $spacing-6;
+  padding-top: $spacing-4;
+  background-color: rgba(217, 247, 226, 0.3);
+  min-height: 100vh;
 
   .dashboard-header {
-    margin-bottom: $spacing-8;
+    margin-bottom: $spacing-6;
 
     .title {
       font-size: $font-size-3xl;
@@ -31,6 +34,8 @@
 
     .stat-card {
       padding: $spacing-4;
+      transition: box-shadow 0.3s ease;
+      cursor: pointer;
 
       .stat-value {
         font-size: $font-size-2xl;
@@ -78,47 +83,73 @@
       .activity-list {
         display: flex;
         flex-direction: column;
-        gap: $spacing-4;
+        gap: 0;
 
         .activity-item {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: $spacing-4;
-          border: 1px solid $color-gray-200;
-          border-radius: $border-radius-lg;
-          transition: background-color 0.15s ease;
+          padding: $spacing-3 $spacing-4;
+          border-left: 3px solid transparent;
+          border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+          transition: all 0.2s ease;
+          position: relative;
+
+          &:last-child {
+            border-bottom: none;
+          }
 
           &:hover {
-            background-color: rgba(243, 244, 246, 0.5);
+            background-color: rgba(243, 244, 246, 0.4);
+            border-left-color: $color-green-primary;
+            padding-left: $spacing-5;
           }
 
           .activity-info {
             flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: $spacing-1;
+            min-width: 0;
 
             .activity-action {
-              font-weight: 500;
-              margin-bottom: $spacing-1;
+              font-weight: 600;
+              font-size: $font-size-base;
+              color: $color-gray-900;
+              margin: 0;
+              line-height: 1.4;
             }
 
             .activity-employee {
               font-size: $font-size-sm;
-              color: $color-gray-500;
+              color: $color-gray-600;
+              margin: 0;
+              font-weight: 400;
             }
           }
 
           .activity-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: $spacing-1;
             text-align: right;
+            margin-left: $spacing-4;
+            flex-shrink: 0;
 
             .activity-amount {
-              font-weight: 600;
+              font-weight: 700;
               color: $color-success;
-              margin-bottom: $spacing-1;
+              font-size: $font-size-base;
+              margin: 0;
+              line-height: 1.4;
             }
 
             .activity-time {
               font-size: $font-size-xs;
               color: $color-gray-500;
+              margin: 0;
+              white-space: nowrap;
             }
           }
         }

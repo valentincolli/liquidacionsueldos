@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calculator, Plus, TrendingUp, Clock, History, Settings, Printer, Download, FileText, DollarSign, User, Eye, CheckCircle } from 'lucide-react';
+import { Calculator, Plus, TrendingUp, Clock, History, Settings, Printer, Download, FileText, DollarSign, User, Eye, CheckCircle, Search, ChevronDown, Users } from 'lucide-react';
 import {ProcessPayrollModal} from '../Components/ProcessPayrollModal/ProcessPayrollModal';
 import {Modal, ModalFooter } from '../Components/Modal/Modal';
 import { useNotification } from '../Hooks/useNotification';
@@ -95,40 +95,52 @@ export default function Liquidacion() {
     link.click();
   };
 
-  const pendingCount = payrollList.filter(p => p.status === 'Pendiente').length;
-  const completedCount = payrollList.filter(p => p.status === 'Procesada').length;
-  const totalMonthAmount = payrollList.reduce((sum, p) => sum + p.netSalary, 0);
+  // Calcular estadísticas desde liquidaciones
+  const pendingCount = liquidaciones.filter(liq => {
+    const estado = (liq.estado || '').toLowerCase();
+    return estado === 'pendiente' || estado === 'p';
+  }).length;
+  
+  const completedCount = liquidaciones.filter(liq => {
+    const estado = (liq.estado || '').toLowerCase();
+    return estado === 'procesada' || estado === 'completada' || estado === 'procesado' || estado === 'completado';
+  }).length;
+  
+  const totalMonthAmount = liquidaciones.reduce((sum, liq) => {
+    return sum + (Number(liq.total_neto) || 0);
+  }, 0);
+
+  // Filtrar liquidaciones según búsqueda y estado
+  const filteredLiquidaciones = liquidaciones.filter(liq => {
+    const matchesSearch = !searchTerm || 
+      `${liq.nombreEmpleado || ''} ${liq.apellidoEmpleado || ''}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (liq.legajoEmpleado || '').toString().includes(searchTerm);
+    
+    const matchesStatus = statusFilter === 'Todos' || 
+      (statusFilter === 'Pendientes' && ((liq.estado || '').toLowerCase() === 'pendiente' || (liq.estado || '').toLowerCase() === 'p')) ||
+      (statusFilter === 'Procesadas' && ((liq.estado || '').toLowerCase() === 'procesada' || (liq.estado || '').toLowerCase() === 'completada'));
+    
+    return matchesSearch && matchesStatus;
+  });
 
   const statsList = [
     {
-      title: 'Total Bruto Mes',
-      value: dashboardStats?.totalBrutoMes ? `$${Number(dashboardStats.totalBrutoMes).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—',
-      icon: Calculator,
-      colorClass: 'primary'
-    },
-    {
-      title: 'Total Neto Mes',
-      value: dashboardStats?.totalNetoMes ? `$${Number(dashboardStats.totalNetoMes).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—',
-      icon: DollarSign,
-      colorClass: 'success'
-    },
-    {
-      title: 'Cantidad Empleados',
-      value: dashboardStats?.cantidadEmpleados ?? '—',
-      icon: User,
-      colorClass: 'primary'
-    },
-    {
-      title: 'Liquidaciones Hechas',
-      value: dashboardStats?.cantidadLiquidacionesHechas ?? '—',
-      icon: TrendingUp,
-      colorClass: 'success'
-    },
-    {
-      title: 'Liquidaciones Pendientes',
-      value: dashboardStats?.cantidadLiquidacionesPendientes ?? '—',
+      title: 'Pendientes',
+      value: pendingCount,
       icon: Clock,
       colorClass: 'warning'
+    },
+    {
+      title: 'Completadas',
+      value: completedCount,
+      icon: null,
+      colorClass: 'primary'
+    },
+    {
+      title: 'Total del Mes',
+      value: `$${totalMonthAmount.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      icon: TrendingUp,
+      colorClass: 'success'
     }
   ];
 
@@ -140,9 +152,6 @@ export default function Liquidacion() {
           <h1 className="title title-gradient animated-title">
             Liquidación de Sueldos
           </h1>
-          <p className="subtitle">
-            Procesa y gestiona las liquidaciones de sueldos de los empleados
-          </p>
         </div>
         <button className="add-btn" onClick={() => setShowProcessModal(true)}>
           <Plus className="btn-icon" />
@@ -159,71 +168,142 @@ export default function Liquidacion() {
                 <div className={`stat-value ${s.colorClass}`}>{s.value}</div>
                 <p className="stat-label">{s.title}</p>
               </div>
-              <s.icon className={`stat-icon ${s.colorClass}`} />
+              {s.icon && <s.icon className={`stat-icon ${s.colorClass}`} />}
             </div>
           </div>
         ))}
       </div>
 
-      {/* Placeholder Content */}
+      {/* Search and Filter Bar */}
+      <div className="search-filter-container">
+        <div className="search-container">
+          <Search className="search-icon" />
+          <input
+            type="text"
+            placeholder="Buscar por empleado, cargo o departamento..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+          />
+        </div>
+        <div className="filter-controls">
+          <select
+            className="filter-select"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="Todos">Todos los estados</option>
+            <option value="Pendientes">Pendientes</option>
+            <option value="Procesadas">Procesadas</option>
+          </select>
+          <ChevronDown className="filter-arrow" />
+        </div>
+      </div>
+
+      {/* Main Content */}
       <div className="main-content">
-        <div className="card employees-list">
+        <div className="card liquidaciones-table-container">
           <div className="card-header list-header">
-            <h2 className="list-title section-title-effect">Lista de Liquidaciones</h2>
+            <h2 className="list-title section-title-effect">Liquidaciones Recientes</h2>
             <p className="list-description">
-              {liquidaciones.length} liquidación{liquidaciones.length !== 1 ? 'es' : ''} encontrada{liquidaciones.length !== 1 ? 's' : ''}
+              Historial de liquidaciones procesadas
             </p>
           </div>
-          <div className="card-content list-content">
-            {liquidaciones.length === 0 ? (
+          <div className="card-content">
+            {filteredLiquidaciones.length === 0 ? (
               <div className="empty-state">
                 <FileText className="empty-icon" />
                 <h3>Todavía no hay liquidaciones</h3>
                 <p>Cuando se generen, aparecerán aquí.</p>
               </div>
             ) : (
-              <div className="employee-list">
-                {liquidaciones.map((liq) => (
-                  <div
-                    key={liq.id}
-                    className="employee-item"
-                  >
-                    <div className="employee-grid">
-                      <div className="employee-info">
-                        <h3 className="employee-name">{`${liq.nombreEmpleado || ''} ${liq.apellidoEmpleado || ''}`}</h3>
-                        <p className="employee-email">Legajo: {liq.legajoEmpleado || '-'}</p>
-                      </div>
-                      <div className="employee-position">
-                        <p className="position-title">Período: {liq.periodoPago || '-'}</p>
-                        <p className="department">Fecha Pago: {liq.fechaPago ? new Date(liq.fechaPago).toLocaleDateString('es-AR') : '-'}</p>
-                      </div>
-                      <div className="employee-salary">
-                        <p className="salary-amount">
-                          ${(liq.total_neto ?? 0).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </p>
-                        <p className="hire-date">Total Neto</p>
-                      </div>
-                      <div className="employee-status">
-                        <span className={`status-badge ${liq.estado?.toLowerCase() || 'completada'}`}>
-                          {liq.estado ? liq.estado.charAt(0).toUpperCase() + liq.estado.slice(1) : 'Completada'}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="employee-actions">
-                      <button
-                        className="action-icon-button view-action"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewDetails(liq);
-                        }}
-                        title="Ver detalle"
-                      >
-                        <Eye className="action-icon" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <table className="liquidaciones-table">
+                <thead>
+                  <tr>
+                    <th>EMPLEADO</th>
+                    <th>PERÍODO</th>
+                    <th>NETO</th>
+                    <th>ESTADO</th>
+                    <th>FECHA PAGO</th>
+                    <th>ACCIONES</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredLiquidaciones.map((liq) => {
+                    const estado = (liq.estado || '').toLowerCase();
+                    const isPendiente = estado === 'pendiente' || estado === 'p';
+                    const isProcesada = estado === 'procesada' || estado === 'completada' || estado === 'completado' || estado === 'procesado';
+                    
+                    return (
+                      <tr key={liq.id || `${liq.legajoEmpleado}-${liq.periodoPago}`} className="liquidacion-row">
+                        <td className="employee-cell">
+                          <div className="employee-info-table">
+                            <Users className="employee-icon-table" />
+                            <div className="employee-details-table">
+                              <div className="employee-name-table">
+                                {`${liq.nombreEmpleado || ''} ${liq.apellidoEmpleado || ''}`}
+                              </div>
+                              <div className="employee-position-table">
+                                {employees.find(emp => emp.legajo === liq.legajoEmpleado)?.categoriaNombre || '-'}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="period-cell">
+                          {liq.periodoPago || '-'}
+                        </td>
+                        <td className="neto-cell">
+                          <span className="neto-amount">
+                            ${(liq.total_neto ?? 0).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        </td>
+                        <td className="status-cell">
+                          <span className={`status-badge ${isPendiente ? 'pendiente' : isProcesada ? 'procesada' : 'completada'}`}>
+                            {isPendiente ? 'PENDIENTE' : isProcesada ? 'PROCESADA' : 'PROCESADA'}
+                          </span>
+                        </td>
+                        <td className="date-cell">
+                          {isPendiente ? 'Pendiente' : (liq.fechaPago ? new Date(liq.fechaPago).toLocaleDateString('es-AR') : '-')}
+                        </td>
+                        <td className="actions-cell">
+                          <div className="table-actions">
+                            <button
+                              className="action-icon-button view-action"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewDetails(liq);
+                              }}
+                              title="Ver detalle"
+                            >
+                              <Eye className="action-icon" />
+                            </button>
+                            <button
+                              className="action-icon-button print-action"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handlePrintPayroll(liq);
+                              }}
+                              title="Imprimir"
+                            >
+                              <Printer className="action-icon" />
+                            </button>
+                            <button
+                              className="action-icon-button download-action"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDownloadPayroll(liq);
+                              }}
+                              title="Descargar"
+                            >
+                              <Download className="action-icon" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             )}
           </div>
         </div>
@@ -239,20 +319,20 @@ export default function Liquidacion() {
           <div className="card-content">
             <div className="actions-list">
               <button className="action-btn primary" onClick={() => setShowProcessModal(true)}>
+                <FileText className="action-icon" />
                 <span>Procesar Liquidación</span>
-                <Calculator className="action-icon" />
               </button>
-              <button className="action-btn success">
-                <span>Generar Reportes</span>
+              <button className="action-btn primary" onClick={() => navigate('/reportes')}>
                 <TrendingUp className="action-icon" />
+                <span>Generar Reportes</span>
               </button>
-              <button className="action-btn warning" onClick={() => navigate('/historial-pagos')}>
-                <span>Historial</span>
+              <button className="action-btn primary" onClick={() => navigate('/historial-pagos')}>
                 <History className="action-icon" />
+                <span>Historial</span>
               </button>
-              <button className="action-btn secondary">
-                <span>Configuración</span>
+              <button className="action-btn primary">
                 <Settings className="action-icon" />
+                <span>Configuración</span>
               </button>
             </div>
           </div>

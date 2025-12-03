@@ -1,6 +1,7 @@
 import React from 'react';
-import { Search, Plus, Edit, Eye, Filter, DollarSign, UserX, UserCheck, X } from 'lucide-react';
+import { Search, Plus, Edit, Eye, Filter, DollarSign, UserX, UserCheck, X, Users } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { EmployeeViewModal } from '../Components/EmployeeViewModal/EmployeeViewModal.jsx';
 import { NewEmployeeModal } from '../Components/NewEmployeeModal/NewEmployeeModal.jsx';
 import { EmployeeEditModal } from '../Components/EmployeeEditModal/EmployeeEditModal.jsx';
@@ -203,9 +204,6 @@ export default function Empleados() {
           <h1 className="title title-gradient animated-title">
             Gestión de Empleados
           </h1>
-          <p className="subtitle">
-            Administra la información y datos de todos los empleados
-          </p>
         </div>
         <button className="add-employee-btn" onClick={() => setShowNewEmployeeModal(true)}>
           <Plus className="btn-icon" />
@@ -215,26 +213,70 @@ export default function Empleados() {
 
       {/* Stats Summary */}
       <div className="stats-overview">
-        <div className="card stat-card">
+        <motion.div 
+          className="card stat-card"
+          whileHover={{ 
+            scale: 1.05,
+            y: -5,
+            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+            transition: { duration: 0.2 }
+          }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           <div className="stat-value success">{employees.length}</div>
           <p className="stat-label">Total Empleados</p>
-        </div>
-        <div className="card stat-card">
+        </motion.div>
+        <motion.div 
+          className="card stat-card"
+          whileHover={{ 
+            scale: 1.05,
+            y: -5,
+            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+            transition: { duration: 0.2 }
+          }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+        >
           <div className="stat-value primary">
             {employees.filter(emp => emp.estado === 'ACTIVO').length}
           </div>
           <p className="stat-label">Empleados Activos</p>
-        </div>
-        <div className="card stat-card">
+        </motion.div>
+        <motion.div 
+          className="card stat-card"
+          whileHover={{ 
+            scale: 1.05,
+            y: -5,
+            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+            transition: { duration: 0.2 }
+          }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+        >
           <div className="stat-value warning">
             {employees.filter(emp => emp.estado === 'DADO_DE_BAJA').length}
           </div>
           <p className="stat-label">Dados de baja</p>
-        </div>
-        <div className="card stat-card">
+        </motion.div>
+        <motion.div 
+          className="card stat-card"
+          whileHover={{ 
+            scale: 1.05,
+            y: -5,
+            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+            transition: { duration: 0.2 }
+          }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.3 }}
+        >
           <div className="stat-value default">{areas.length} </div>
           <p className="stat-label">Areas</p>
-        </div>
+        </motion.div>
       </div>
 
       {/* Filters */}
@@ -350,103 +392,91 @@ export default function Empleados() {
       </div>
 
       {/* Employee List */}
-      <div className="card employees-list">
-        <div className="card-header list-header">
-          <h2 className="list-title section-title-effect">Lista de Empleados</h2>
-          <p className="list-description">
-            {filtered.length} empleados encontrados
-          </p>
-        </div>
-        <div className="card-content list-content">
-          <div className="employee-list">
+      <div className="employees-table-container">
+        <table className="employees-table">
+          <thead>
+            <tr>
+              <th>EMPLEADO</th>
+              <th>ESTADO</th>
+              <th>ACCIÓN</th>
+            </tr>
+          </thead>
+          <tbody>
             {filtered.map((employee) => (
-              <div
-                key={employee.legajo ?? `${employee.nombre}-${employee.apellido}`}
-                className="employee-item"
-              >
-                <div className="employee-grid">
+              <tr key={employee.legajo ?? `${employee.nombre}-${employee.apellido}`} className="employee-row">
+                <td className="employee-cell">
                   <div className="employee-info">
-                    <h3 className="employee-name">{`${employee.nombre} ${employee.apellido}`}</h3>
-                    <p className="employee-email">Legajo: {employee.legajo}</p>
+                    <Users className="employee-icon" />
+                    <div className="employee-details">
+                      <div className="employee-name">{`${employee.apellido?.toUpperCase() || ''} ${employee.nombre?.toUpperCase() || ''}`}</div>
+                      <div className="employee-legajo">
+                        Legajo: #{employee.legajo} <span className="convenio-name">{employee.gremioNombre === "LUZ_Y_FUERZA" ? "Luz y Fuerza" : (employee.gremioNombre || "-")}</span>
+                      </div>
+                    </div>
+                    <div className="employee-status-icon"></div>
                   </div>
-                  <div className="employee-position">
-                    <p className="position-title">
-                      {employee.gremioNombre === "LUZ_Y_FUERZA" ? "Luz y Fuerza" : (employee.gremioNombre || "-")}
-                    </p>
-                    <p className="department">{employee.categoriaNombre || "-"}</p>
-                  </div>
-                  <div className="employee-salary">
-                    <p className="salary-amount">
-                      {employee.gremio?.nombre === "UOCRA" ? (
-                        employee.nombreZona || "-"
-                      ) : Array.isArray(employee.nombreAreas) ? (
-                        employee.nombreAreas.join(", ")
-                      ) : (
-                        employee.nombreAreas || "-"
-                      )}
-                    </p>
-                    <p className="hire-date">Ingreso: {employee.inicioActividad}</p>
-                  </div>
-                  <div className="employee-status">
-                    <span className={`status-badge ${getStatusClass(employee.estado)}`}>
-                      {employee.estado === "ACTIVO" ? "Activo" : "Dado de baja"}
-                    </span>
-                  </div>
-                </div>
-                <div className="employee-actions">
-                  <Tooltip content="Ver detalles del empleado" position="top">
-                    <button
-                      className="action-icon-button view-action"
-                      onClick={() => handleViewEmployee(employee)}
-                    >
-                      <Eye className="action-icon" />
-                    </button>
-                  </Tooltip>
-
-                  <Tooltip content="Editar empleado" position="top">
-                    <button
-                      className="action-icon-button edit-action"
-                      onClick={() => handleEditEmployee(employee)}
-                      disabled={employee.estado !== 'ACTIVO'}
-                    >
-                      <Edit className="action-icon" />
-                    </button>
-                  </Tooltip>
-
-                  <Tooltip content="Liquidar sueldo" position="top">
-                    <button
-                      className="action-icon-button liquidate-action"
-                      onClick={() => handleLiquidarSueldo(employee)}
-                      disabled={employee.estado !== 'ACTIVO'}
-                    >
-                      <DollarSign className="action-icon" />
-                    </button>
-                  </Tooltip>
-
-                  {employee.estado === 'ACTIVO' ? (
-                    <Tooltip content="Dar de baja empleado" position="top">
+                </td>
+                <td className="status-cell">
+                  <span className={`status-badge ${getStatusClass(employee.estado)}`}>
+                    {employee.estado === "ACTIVO" ? "Activo" : "Dado de baja"}
+                  </span>
+                </td>
+                <td className="action-cell">
+                  <div className="employee-actions">
+                    <Tooltip content="Ver detalles del empleado" position="top">
                       <button
-                        className="action-icon-button deactivate-action"
-                        onClick={() => handleStateEmployee(employee)}
+                        className="action-icon-button view-action"
+                        onClick={() => handleViewEmployee(employee)}
                       >
-                        <UserX className="action-icon" />
+                        <Eye className="action-icon" />
                       </button>
                     </Tooltip>
-                  ) : (
-                    <Tooltip content="Dar de alta empleado" position="top">
+
+                    <Tooltip content="Editar empleado" position="top">
                       <button
-                        className="action-icon-button activate-action"
-                        onClick={() => handleStateEmployee(employee)}
+                        className="action-icon-button edit-action"
+                        onClick={() => handleEditEmployee(employee)}
+                        disabled={employee.estado !== 'ACTIVO'}
                       >
-                        <UserCheck className="action-icon" />
+                        <Edit className="action-icon" />
                       </button>
                     </Tooltip>
-                  )}
-                </div>
-              </div>
+
+                    <Tooltip content="Liquidar sueldo" position="top">
+                      <button
+                        className="action-icon-button liquidate-action"
+                        onClick={() => handleLiquidarSueldo(employee)}
+                        disabled={employee.estado !== 'ACTIVO'}
+                      >
+                        <DollarSign className="action-icon" />
+                      </button>
+                    </Tooltip>
+
+                    {employee.estado === 'ACTIVO' ? (
+                      <Tooltip content="Dar de baja empleado" position="top">
+                        <button
+                          className="action-icon-button deactivate-action"
+                          onClick={() => handleStateEmployee(employee)}
+                        >
+                          <UserX className="action-icon" />
+                        </button>
+                      </Tooltip>
+                    ) : (
+                      <Tooltip content="Dar de alta empleado" position="top">
+                        <button
+                          className="action-icon-button activate-action"
+                          onClick={() => handleStateEmployee(employee)}
+                        >
+                          <UserCheck className="action-icon" />
+                        </button>
+                      </Tooltip>
+                    )}
+                  </div>
+                </td>
+              </tr>
             ))}
-          </div>
-        </div>
+          </tbody>
+        </table>
       </div>
       {/* Modales */}
       <NewEmployeeModal

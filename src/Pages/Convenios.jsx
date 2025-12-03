@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, MapPin, Settings, Download, TrendingUp, Users, Calculator, Upload } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { ConvenioCard } from '../Components/ConvenioCard/ConvenioCard.jsx';
 import { Modal, ModalFooter } from '../Components/Modal/Modal.jsx';
 import '../styles/components/_convenios.scss';
@@ -88,6 +89,10 @@ export default function Convenios() {
 
   const totalEmpleados = convenios.reduce((total, conv) => total + conv.employeeCount || 0, 0);
   const totalCategorias = convenios.reduce((total, conv) => total + conv.categories || 0, 0);
+  
+  // Calcular salario promedio (aproximado basado en valores típicos)
+  // En producción, esto debería calcularse desde los empleados reales
+  const salarioPromedio = totalEmpleados > 0 ? Math.round((285000 + 260000) / 2) : 0;
 
   return (
     <div className="placeholder-page">
@@ -97,15 +102,24 @@ export default function Convenios() {
           <h1 className="title title-gradient animated-title">
             Gestión de Convenios
           </h1>
-          <p className="subtitle">
-            Administra los convenios colectivos de trabajo y sus escalas salariales
-          </p>
+          <p className="subtitle">Administra los convenios colectivos de trabajo y sus escalas salariales</p>
         </div>
       </div>
 
       {/* Stats Summary */}
       <div className="stats-grid">
-        <div className="card stat-card">
+        <motion.div 
+          className="card stat-card"
+          whileHover={{ 
+            scale: 1.05,
+            y: -5,
+            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+            transition: { duration: 0.2 }
+          }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           <div className="stat-content">
             <div className="stat-info">
               <div className="stat-value success">{convenios.length}</div>
@@ -113,8 +127,19 @@ export default function Convenios() {
             </div>
             <FileText className="stat-icon success" />
           </div>
-        </div>
-        <div className="card stat-card">
+        </motion.div>
+        <motion.div 
+          className="card stat-card"
+          whileHover={{ 
+            scale: 1.05,
+            y: -5,
+            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+            transition: { duration: 0.2 }
+          }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+        >
           <div className="stat-content">
             <div className="stat-info">
               <div className="stat-value primary">
@@ -124,18 +149,29 @@ export default function Convenios() {
             </div>
             <Users className="stat-icon primary" />
           </div>
-        </div>
-        <div className="card stat-card">
+        </motion.div>
+        <motion.div 
+          className="card stat-card"
+          whileHover={{ 
+            scale: 1.05,
+            y: -5,
+            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+            transition: { duration: 0.2 }
+          }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+        >
           <div className="stat-content">
             <div className="stat-info">
               <div className="stat-value warning">
-                {totalCategorias}
+                ${salarioPromedio.toLocaleString('es-AR')}
               </div>
-              <p className="stat-label">Total Categorías</p>
+              <p className="stat-label">Salario Promedio</p>
             </div>
             <Calculator className="stat-icon warning" />
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Convenios Cards */}

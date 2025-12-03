@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, ModalFooter } from '../Modal/Modal';
-import { Search, Users, Download, Printer, Plus, X, CheckCircle, User, Calendar, Badge, Clock, Star } from 'lucide-react';
+import { Modal } from '../Modal/Modal';
+import { Search, Users, Download, Printer, Plus, X, CheckCircle, User, Calendar, Badge, Clock, Star, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
 import './ProcessPayrollModal.scss';
 import * as api from '../../services/empleadosAPI';
 import { useNotification } from '../../Hooks/useNotification';
@@ -453,31 +453,17 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess, employees, ini
       isOpen={isOpen}
       onClose={resetModal}
       title={
-        currentStep === 'search' ? 'Buscar Empleado' :
-        currentStep === 'payroll' ? `Liquidación - ${selectedEmployee?.nombre}` :
+        currentStep === 'search' ? 'Seleccionar Empleado' :
+        currentStep === 'payroll' ? 'Configurar Liquidación' :
         'Vista Previa del Recibo'
       }
-      size={currentStep === 'preview' ? 'large' : 'medium'}
-      className="process-payroll-modal"
+      size={currentStep === 'search' ? 'xlarge' : 'large'}
+      className={`process-payroll-modal ${currentStep === 'search' ? 'search-step' : ''} ${currentStep === 'payroll' ? 'payroll-step' : ''}`}
     >
       {/* STEP 1: EMPLOYEE SEARCH */}
       {currentStep === 'search' && (
         <div className="employee-search">
           <div className="search-section">
-            <div className="section-header-enhanced">
-              <div className="step-indicator">
-                <span className="step-number">1</span>
-                <Star className="step-star" />
-              </div>
-              <div className="header-content">
-                <h3 className="section-title section-title-effect">
-                  <Users className="title-icon" />
-                  Seleccionar Empleado
-                </h3>
-                <p className="section-subtitle">Busca y selecciona el empleado para generar su liquidación</p>
-              </div>
-            </div>
-
             <div className="search-container">
               <div className="search-input-container">
                 <Search className="search-icon" />
@@ -488,48 +474,48 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess, employees, ini
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="search-input"
                 />
-                {searchTerm && (
-                  <div className="search-badge">
-                    <Badge className="badge-icon" />
-                    <span>{filteredEmployees.length} resultado(s)</span>
-                  </div>
-                )}
               </div>
             </div>
 
             <div className="employees-list">
               {filteredEmployees.length > 0 ? (
-                filteredEmployees.map(employee => (
-                  <div key={employee.legajo} className="employee-card" onClick={() => handleSelectEmployee(employee)}>
-                    <div className="employee-card-accent"></div>
-                    <div className="employee-info">
-                      <div className="employee-main">
-                        <div className="employee-avatar">
-                          <User className="employee-icon" />
-                          <div className="status-dot"></div>
-                        </div>
-                        <div className="employee-details">
-                          <h4 className="employee-name">{`${employee.nombre} ${employee.apellido}`}</h4>
-                          <div className="employee-badges">
-                            <span className="badge legajo-badge">#{employee.legajo}</span>
-                            <span className="badge category-badge">{employee.categoria}</span>
-                            <span className="badge convenio-badge">{formatGremioNombre(employee.gremio.nombre)}</span>
+                <table className="employees-table">
+                  <thead>
+                    <tr>
+                      <th>EMPLEADO</th>
+                      <th>ACCIÓN</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredEmployees.map(employee => (
+                      <tr 
+                        key={employee.legajo} 
+                        className="employee-row"
+                      >
+                        <td className="employee-cell">
+                          <div className="employee-info">
+                            <Users className="employee-icon" />
+                            <div className="employee-details">
+                              <div className="employee-name">{`${employee.apellido?.toUpperCase() || ''} ${employee.nombre?.toUpperCase() || ''}`}</div>
+                              <div className="employee-legajo">
+                                Legajo: #{employee.legajo} <span className="convenio-name">{formatGremioNombre(employee.gremio.nombre)}</span>
+                              </div>
+                            </div>
+                            <div className="employee-status-icon"></div>
                           </div>
-                          <p className="employee-meta">
-                            <Clock className="meta-icon" />
-                            Ingreso: {employee.inicioActividad}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="employee-salary">
-                        <span className="salary-label">Sueldo Básico:</span>
-                        <span className="salary-value">
-                          {formatCurrencyAR(employee.salary || employee.sueldoBasico || 0)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))
+                        </td>
+                        <td className="action-cell">
+                          <button 
+                            className="btn btn-liquidar" 
+                            onClick={() => handleSelectEmployee(employee)}
+                          >
+                            Liquidar
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               ) : (
                 <div className="no-results">
                   <Users className="no-results-icon" />
@@ -539,23 +525,17 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess, employees, ini
               )}
             </div>
           </div>
+          <div className="step-actions">
+            <button className="btn btn-secondary" onClick={resetModal}>
+              Cancelar
+            </button>
+          </div>
         </div>
       )}
 
       {/* STEP 2: PAYROLL FORM */}
       {currentStep === 'payroll' && selectedEmployee && (
         <div className="payroll-form">
-          <div className="section-header-enhanced">
-            <div className="step-indicator">
-              <span className="step-number">2</span>
-              <Star className="step-star" />
-            </div>
-            <div className="header-content">
-              <h3 className="section-title">Configurar Liquidación</h3>
-              <p className="section-subtitle">Ajusta los conceptos y genera el recibo de sueldo</p>
-            </div>
-          </div>
-
           <div className="employee-header">
             <div className="employee-summary">
               <div className="employee-avatar-small">
@@ -607,11 +587,6 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess, employees, ini
                   <span>{concepts.length} conceptos</span>
                 </div>
               </div>
-              <button className="btn btn-secondary btn-sm enhanced-btn">
-                <Plus className="h-4 w-4 mr-1" />
-                Agregar Concepto
-                <div className="btn-accent"></div>
-              </button>
             </div>
 
             <div className="concepts-table">
@@ -709,22 +684,54 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess, employees, ini
                   </div>
                 </div>
               ))}
+              <div className="concepts-table-footer">
+                <button className="btn btn-secondary" onClick={handleAddConcepto}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Agregar Concepto
+                </button>
+              </div>
             </div>
+          </div>
 
-            <div className="totals-summary">
-              <div className="total-item">
-                <span>Total Remuneraciones:</span>
-                <span className="amount positive">{formatCurrencyAR(remunerations)}</span>
+          <div className="totals-summary">
+            <div className="total-cards">
+              <div className="total-card remuneraciones">
+                <div className="total-icon-wrapper">
+                  <TrendingUp className="total-icon" />
+                </div>
+                <div className="total-content">
+                  <div className="total-label">Total Remuneraciones</div>
+                  <div className="total-amount positive">{formatCurrencyAR(remunerations)}</div>
+                </div>
               </div>
-              <div className="total-item">
-                <span>Total Descuentos:</span>
-                <span className="amount negative">{formatCurrencyAR(deductions)}</span>
+              <div className="total-card descuentos">
+                <div className="total-icon-wrapper">
+                  <TrendingDown className="total-icon" />
+                </div>
+                <div className="total-content">
+                  <div className="total-label">Total Descuentos</div>
+                  <div className="total-amount negative">{formatCurrencyAR(deductions)}</div>
+                </div>
               </div>
-              <div className="total-item final">
-                <span>NETO A COBRAR:</span>
-                <span className="amount final">{formatCurrencyAR(netAmount)}</span>
+              <div className="total-card final">
+                <div className="total-icon-wrapper">
+                  <DollarSign className="total-icon" />
+                </div>
+                <div className="total-content">
+                  <div className="total-label">NETO A COBRAR</div>
+                  <div className="total-amount final">{formatCurrencyAR(netAmount)}</div>
+                </div>
               </div>
             </div>
+          </div>
+          <div className="step-actions">
+            <button className="btn btn-secondary" onClick={() => setCurrentStep('search')}>
+              Volver
+            </button>
+            <button className="btn btn-primary" onClick={generatePayroll} disabled={isProcessing}>
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Generar Recibo
+            </button>
           </div>
         </div>
       )}
@@ -738,7 +745,6 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess, employees, ini
               <Star className="step-star" />
             </div>
             <div className="header-content">
-              <h3 className="section-title">Vista Previa del Recibo</h3>
               <p className="section-subtitle">Revisa y confirma la liquidación antes de imprimir</p>
             </div>
           </div>
@@ -900,41 +906,6 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess, employees, ini
         </div>
       )}
 
-      <ModalFooter>
-        {currentStep === 'search' && (
-          <button className="btn btn-secondary" onClick={resetModal}>
-            Cancelar
-          </button>
-        )}
-
-        {currentStep === 'payroll' && (
-          <>
-            <button className="btn btn-secondary" onClick={() => setCurrentStep('search')}>
-              Volver
-            </button>
-            <button className="btn btn-primary" onClick={generatePayroll} disabled={isProcessing}>
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Generar Recibo
-            </button>
-          </>
-        )}
-
-        {currentStep === 'preview' && (
-          <>
-            <button className="btn btn-secondary" onClick={() => setCurrentStep('payroll')}>
-              Editar
-            </button>
-            <button className="btn btn-success" onClick={handlePrint}>
-              <Printer className="h-4 w-4 mr-2" />
-              Imprimir
-            </button>
-            <button className="btn btn-primary" onClick={handleDownload}>
-              <Download className="h-4 w-4 mr-2" />
-              Descargar
-            </button>
-          </>
-        )}
-      </ModalFooter>
     </Modal>
   );
 }

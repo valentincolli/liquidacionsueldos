@@ -322,13 +322,6 @@ export default function ConvenioDetail() {
     <div className="convenio-detail">
       {/* Header */}
       <div className="detail-header">
-        <div className="header-navigation">
-          <button className="back-btn" onClick={handleGoBack}>
-            <ArrowLeft className="back-icon" />
-            Volver a Convenios
-          </button>
-        </div>
-
         <div className="header-content">
           <div className="header-info">
             <h1 className="detail-title">{currentData.name}</h1>
@@ -350,6 +343,12 @@ export default function ConvenioDetail() {
           </div>
 
           <div className="header-actions">
+            <div className="header-actions-top">
+              <button className="back-btn-icon" onClick={handleGoBack}>
+                <ArrowLeft className="back-icon" />
+              </button>
+            </div>
+            <div className="header-actions-bottom">
             {isEditing ? (
               <>
                 <button className="action-btn save" onClick={handleSave}>
@@ -377,6 +376,7 @@ export default function ConvenioDetail() {
                 </button>
               </>
             )}
+            </div>
           </div>
         </div>
       </div>
@@ -385,10 +385,6 @@ export default function ConvenioDetail() {
       <div className="salary-table-container">
       {controller === 'lyf' && (
       <div className="salary-table luz-y-fuerza">
-        <div className="table-header">
-          <h2>ESCALAS SALARIALES - LUZ Y FUERZA</h2>
-        </div>
-
         {(() => {
           const data = currentData; // isEditing ? editableData : convenio, ya lo tenés arriba
           const cats = [...(data.salaryTable?.categories || [])]
@@ -437,12 +433,12 @@ export default function ConvenioDetail() {
             <table className="salary-grid">
               <thead>
                 <tr>
-                  <th>CAT</th>
-                  <th>SUELDO BÁSICO</th>
+                  <th rowSpan={2}>CAT</th>
+                  <th rowSpan={2}>SUELDO BÁSICO</th>
                   <th colSpan={AREA_COLUMNS.length}>BONIFICACIONES</th>
                 </tr>
                 <tr>
-                  {['', ''].concat(AREA_COLUMNS).map((hdr, i) => (
+                  {AREA_COLUMNS.map((hdr, i) => (
                     <th key={i}>{hdr}</th>
                   ))}
                 </tr>
@@ -560,10 +556,6 @@ export default function ConvenioDetail() {
     )}
     {controller === 'uocra' && (
       <div className="salary-table uocra">
-        <div className="table-header">
-          <h2>UOCRA - Escalas por Zona</h2>
-        </div>
-
         {(() => {
           const u = currentData?.salaryTable?.uocra;
           if (!u || !u.headers?.length) {

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, FileText, Calculator, TrendingUp, DollarSign, Clock } from 'lucide-react';
+import { motion } from 'framer-motion';
 import '../styles/components/_dashboard.scss';
 import * as api from '../services/empleadosAPI'
 import { ProcessPayrollModal } from '../Components/ProcessPayrollModal/ProcessPayrollModal';
@@ -149,23 +150,32 @@ export default function Dashboard() {
       {/* Header */}
       <div className="dashboard-header">
         <h1 className="title title-gradient animated-title">
-          Dashboard de Gestión de Sueldos
+          Gestión de Sueldos
         </h1>
-        <p className="subtitle">
-          Resumen de la actividad y métricas principales del sistema
-        </p>
       </div>
 
       {/* Stats Cards */}
       <div className="stats-overview">
         {stats.map((stat) => {
           return (
-            <div key={stat.title} className="card stat-card">
+            <motion.div 
+              key={stat.title} 
+              className="card stat-card"
+              whileHover={{ 
+                scale: 1.05,
+                y: -5,
+                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+                transition: { duration: 0.2 }
+              }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
               <div className={`stat-value ${stat.colorClass}`}>
                 {stat.value}
               </div>
               <p className="stat-label">{stat.title}</p>
-            </div>
+            </motion.div>
           );
         })}
       </div>
@@ -232,7 +242,10 @@ export default function Dashboard() {
                 <span>Agregar Empleado</span>
                 <Users className="action-icon" />
               </button>
-              <button className="action-btn warning">
+              <button 
+                className="action-btn warning"
+                onClick={() => navigate('/reportes')}
+              >
                 <span>Ver Reportes</span>
                 <TrendingUp className="action-icon" />
               </button>

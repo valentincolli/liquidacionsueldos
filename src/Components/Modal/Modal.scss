@@ -24,6 +24,7 @@
     animation: modalContentSlideIn 0.3s ease-out;
     position: relative;
 
+
     &.small {
       width: 100%;
       max-width: 600px;
@@ -36,28 +37,30 @@
 
     &.large {
       width: 100%;
-      max-width: 1000px;
+      max-width: 900px;
+      max-height: 95vh;
     }
 
     &.xlarge {
       width: 100%;
-      max-width: 1200px;
+      max-width: 1100px;
+      max-height: 92vh;
     }
 
     .modal-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: $spacing-6;
-      border-bottom: 1px solid $color-gray-200;
-      background: linear-gradient(135deg, $color-gray-50 0%, $color-white 100%);
+      padding: $spacing-4 $spacing-6;
+      border-bottom: 1px solid rgba(16, 185, 129, 0.1);
+      background: rgba(217, 247, 226, 0.3);
 
       .modal-title {
-        font-size: $font-size-xl;
-        font-weight: 600;
-        color: $color-gray-900;
+        font-size: $font-size-2xl;
+        font-weight: 700;
         margin: 0;
-        @extend .section-title-effect;
+        @extend .title-gradient;
+        @extend .animated-title;
       }
 
       .modal-close-btn {
@@ -83,9 +86,11 @@
     }
 
     .modal-body {
-      padding: $spacing-6;
+      padding: $spacing-4 $spacing-6;
+      padding-top: $spacing-4;
       max-height: calc(90vh - 120px);
       overflow-y: auto;
+      background-color: rgba(217, 247, 226, 0.3);
 
       &::-webkit-scrollbar {
         width: 6px;
