@@ -29,18 +29,25 @@
     margin-bottom: $spacing-6;
 
     @media (min-width: 768px) {
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     .stat-card {
-      padding: $spacing-4;
+      padding: $spacing-3 $spacing-4;
       transition: box-shadow 0.3s ease;
       cursor: pointer;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+
+      .stat-label {
+        font-size: $font-size-sm;
+        color: $color-gray-500;
+        margin-bottom: $spacing-1;
+      }
 
       .stat-value {
         font-size: $font-size-2xl;
         font-weight: 700;
-        margin-bottom: $spacing-1;
+        margin-top: 0;
 
         &.success {
           color: $color-success;
@@ -58,98 +65,128 @@
           color: $color-gray-900;
         }
       }
-
-      .stat-label {
-        font-size: $font-size-sm;
-        color: $color-gray-500;
-      }
     }
   }
 
   .main-grid {
     display: grid;
     grid-template-columns: repeat(1, minmax(0, 1fr));
-    gap: $spacing-6;
+    gap: $spacing-3;
 
     @media (min-width: 1024px) {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     .activity-section {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+
       @media (min-width: 1024px) {
         grid-column: span 2 / span 2;
       }
 
-      .activity-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0;
+      .activity-header {
+        padding: $spacing-4;
+        
+        .card-title {
+          font-size: $font-size-base;
+          margin-bottom: $spacing-1;
+        }
 
-        .activity-item {
+        .card-description {
+          font-size: $font-size-xs;
+        }
+      }
+
+      .activity-content {
+        padding: $spacing-3 $spacing-4;
+      }
+
+      .activity-table {
+        width: 100%;
+
+        .activity-table-header {
+          display: grid;
+          grid-template-columns: 2fr 2fr 1.5fr 1.5fr;
+          gap: $spacing-4;
+          padding: $spacing-2 $spacing-3;
+          background-color: rgba(243, 244, 246, 0.5);
+          border-radius: $border-radius;
+          margin-bottom: $spacing-2;
+
+          .activity-col-header {
+            font-size: $font-size-sm;
+            font-weight: 600;
+            color: $color-gray-700;
+            text-align: center;
+
+            &:nth-child(1),
+            &:nth-child(2) {
+              text-align: left;
+            }
+          }
+        }
+
+        .activity-list {
           display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: $spacing-3 $spacing-4;
-          border-left: 3px solid transparent;
-          border-bottom: 1px solid rgba(229, 231, 235, 0.5);
-          transition: all 0.2s ease;
-          position: relative;
+          flex-direction: column;
+          gap: 0;
 
-          &:last-child {
-            border-bottom: none;
-          }
+          .activity-item {
+            display: grid;
+            grid-template-columns: 2fr 2fr 1.5fr 1.5fr;
+            gap: $spacing-4;
+            align-items: center;
+            padding: $spacing-3;
+            border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+            transition: all 0.2s ease;
 
-          &:hover {
-            background-color: rgba(243, 244, 246, 0.4);
-            border-left-color: $color-green-primary;
-            padding-left: $spacing-5;
-          }
-
-          .activity-info {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: $spacing-1;
-            min-width: 0;
-
-            .activity-action {
-              font-weight: 600;
-              font-size: $font-size-base;
-              color: $color-gray-900;
-              margin: 0;
-              line-height: 1.4;
+            &:last-child {
+              border-bottom: none;
             }
 
-            .activity-employee {
-              font-size: $font-size-sm;
-              color: $color-gray-600;
-              margin: 0;
-              font-weight: 400;
-            }
-          }
-
-          .activity-details {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: $spacing-1;
-            text-align: right;
-            margin-left: $spacing-4;
-            flex-shrink: 0;
-
-            .activity-amount {
-              font-weight: 700;
-              color: $color-success;
-              font-size: $font-size-base;
-              margin: 0;
-              line-height: 1.4;
+            &:hover {
+              background-color: rgba(243, 244, 246, 0.4);
             }
 
-            .activity-time {
-              font-size: $font-size-xs;
-              color: $color-gray-500;
-              margin: 0;
-              white-space: nowrap;
+            .activity-col {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+
+              &.action-col {
+                justify-content: flex-start;
+
+                .activity-action {
+                  font-weight: 700;
+                  font-size: calc(#{$font-size-sm} - 2px);
+                  color: $color-gray-900;
+                }
+              }
+
+              &.employee-col {
+                justify-content: flex-start;
+
+                .activity-employee {
+                  font-size: calc(#{$font-size-sm} - 2px);
+                  color: $color-gray-700;
+                  font-weight: 400;
+                }
+              }
+
+              &.amount-col {
+                .activity-amount {
+                  font-weight: 600;
+                  color: $color-success;
+                  font-size: $font-size-sm;
+                }
+              }
+
+              &.time-col {
+                .activity-time {
+                  font-size: $font-size-xs;
+                  color: $color-gray-500;
+                }
+              }
             }
           }
         }
@@ -157,24 +194,53 @@
     }
 
     .quick-actions {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+
+      .quick-actions-header {
+        padding: $spacing-2 $spacing-4;
+        padding-bottom: $spacing-1;
+        display: flex;
+        justify-content: flex-start;
+        
+        .card-title {
+          font-size: calc(#{$font-size-base} - 5px);
+          margin-bottom: 0;
+          text-align: left;
+        }
+      }
+
+      .card-content {
+        padding: $spacing-1 $spacing-3;
+      }
+
       .actions-list {
         display: flex;
         flex-direction: column;
-        gap: $spacing-3;
+        gap: $spacing-1;
 
         .action-btn {
           width: 100%;
           display: flex;
           align-items: center;
-          justify-content: space-between;
+          justify-content: center;
+          gap: 0.25rem;
           padding: $spacing-3;
           border: 1px solid;
-          border-radius: $border-radius-lg;
+          border-radius: $border-radius-sm;
           background: transparent;
           cursor: pointer;
           transition: all 0.15s ease;
           text-decoration: none;
           font-weight: 500;
+          text-align: center;
+
+          span {
+            display: inline-block;
+          }
+
+          .action-icon {
+            flex-shrink: 0;
+          }
 
           &.primary {
             border-color: $color-green-primary;
@@ -212,6 +278,16 @@
 
             &:hover {
               background-color: $color-gray-100;
+            }
+          }
+
+          &.gray {
+            border-color: $color-gray-400;
+            color: $color-green-primary;
+
+            &:hover {
+              background-color: $color-gray-100;
+              color: $color-green-primary;
             }
           }
 

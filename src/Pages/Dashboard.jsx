@@ -83,34 +83,22 @@ export default function Dashboard() {
 
   const stats = [
     {
-      title: 'Total Empleados Activos',
-      value: dashboardStats?.cantidadEmpleados ?? activeEmployees ?? 'Cargando...',
-      icon: Users,
-      colorClass: 'success',
+      title: 'Monto Total Mensual Bruto',
+      value: dashboardStats?.totalBrutoMes ? `$${Number(dashboardStats.totalBrutoMes).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'Cargando...',
+      icon: DollarSign,
+      colorClass: 'primary',
+    },
+    {
+      title: 'Monto Total Mensual Neto',
+      value: dashboardStats?.totalNetoMes ? `$${Number(dashboardStats.totalNetoMes).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'Cargando...',
+      icon: DollarSign,
+      colorClass: 'primary',
     },
     {
       title: 'Liquidaciones Pendientes',
       value: dashboardStats?.cantidadLiquidacionesPendientes ?? 'Cargando...',
       icon: Clock,
       colorClass: 'warning',
-    },
-    {
-      title: 'Liquidaciones Procesadas',
-      value: dashboardStats?.cantidadLiquidacionesHechas ?? 'Cargando...',
-      icon: TrendingUp,
-      colorClass: 'primary',
-    },
-    {
-      title: 'Total Neto',
-      value: dashboardStats?.totalNetoMes ? `$${Number(dashboardStats.totalNetoMes).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'Cargando...',
-      icon: DollarSign,
-      colorClass: 'primary',
-    },
-    {
-      title: 'Total Bruto',
-      value: dashboardStats?.totalBrutoMes ? `$${Number(dashboardStats.totalBrutoMes).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'Cargando...',
-      icon: DollarSign,
-      colorClass: 'primary',
     }
   ];
 
@@ -171,10 +159,10 @@ export default function Dashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
             >
+              <p className="stat-label">{stat.title}</p>
               <div className={`stat-value ${stat.colorClass}`}>
                 {stat.value}
               </div>
-              <p className="stat-label">{stat.title}</p>
             </motion.div>
           );
         })}
@@ -183,48 +171,49 @@ export default function Dashboard() {
       <div className="main-grid">
         {/* Recent Activity */}
         <div className="card activity-section">
-          <div className="card-header">
+          <div className="card-header activity-header">
             <h2 className="card-title section-title-effect">Actividad Reciente</h2>
             <p className="card-description">
               Últimas acciones realizadas en el sistema
             </p>
           </div>
-          <div className="card-content">
-            <div className="activity-list">
-              {recentActivities.map((activity) => (
-                <div 
-                  key={activity.id}
-                  className="activity-item"
-                >
-                  <div className="activity-info">
-                    <p className="activity-action">{activity.action}</p>
-                    <p className="activity-employee">
-                      {activity.employee}
-                    </p>
+          <div className="card-content activity-content">
+            <div className="activity-table">
+              <div className="activity-table-header">
+                <div className="activity-col-header">Acción</div>
+                <div className="activity-col-header">Empleado</div>
+                <div className="activity-col-header">Monto</div>
+                <div className="activity-col-header">Tiempo</div>
+              </div>
+              <div className="activity-list">
+                {recentActivities.map((activity) => (
+                  <div 
+                    key={activity.id}
+                    className="activity-item"
+                  >
+                    <div className="activity-col action-col">
+                      <span className="activity-action">{activity.action}</span>
+                    </div>
+                    <div className="activity-col employee-col">
+                      <span className="activity-employee">{activity.employee}</span>
+                    </div>
+                    <div className="activity-col amount-col">
+                      <span className="activity-amount">{activity.amount || '-'}</span>
+                    </div>
+                    <div className="activity-col time-col">
+                      <span className="activity-time">{activity.time}</span>
+                    </div>
                   </div>
-                  <div className="activity-details">
-                    {activity.amount && (
-                      <p className="activity-amount">
-                        {activity.amount}
-                      </p>
-                    )}
-                    <p className="activity-time">
-                      {activity.time}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
 
         {/* Quick Actions */}
         <div className="card quick-actions">
-          <div className="card-header">
-            <h2 className="card-title section-title-effect">Acciones Rápidas</h2>
-            <p className="card-description">
-              Operaciones más utilizadas
-            </p>
+          <div className="card-header quick-actions-header">
+            <h2 className="card-title">Acciones Rápidas</h2>
           </div>
           <div className="card-content">
             <div className="actions-list">
@@ -232,29 +221,29 @@ export default function Dashboard() {
                 className="action-btn primary"
                 onClick={() => setShowProcessModal(true)}
               >
-                <span>Nueva Liquidación</span>
                 <Calculator className="action-icon" />
+                <span>Nueva Liquidación</span>
               </button>
               <button 
-                className="action-btn success"
+                className="action-btn primary"
                 onClick={() => setShowNewEmployeeModal(true)}
               >
-                <span>Agregar Empleado</span>
                 <Users className="action-icon" />
+                <span>Agregar Empleado</span>
               </button>
               <button 
-                className="action-btn warning"
+                className="action-btn gray"
                 onClick={() => navigate('/reportes')}
               >
-                <span>Ver Reportes</span>
                 <TrendingUp className="action-icon" />
+                <span>Ver Reportes</span>
               </button>
               <button 
-                className="action-btn secondary"
+                className="action-btn gray"
                 onClick={() => navigate('/convenios')}
               >
-                <span>Gestionar Convenios</span>
                 <FileText className="action-icon" />
+                <span>Gestionar Convenios</span>
               </button>
             </div>
           </div>
