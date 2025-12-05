@@ -1,9 +1,10 @@
 import React from 'react';
-import { Eye, Edit, Upload, Users, Calendar, FileText, DollarSign } from 'lucide-react';
+import { Eye, Edit, Users, Calendar, FileText, DollarSign } from 'lucide-react';
 import { Tooltip } from '../ToolTip/ToolTip';
 import './ConvenioCard.scss';
+import { Button } from '../ui/button';
 
-export function ConvenioCard({ convenio, onView, onEdit, onUploadDocument }) {
+export function ConvenioCard({ convenio, onView, onEdit }) {
   // Calcular salario básico promedio (aproximado)
   // En producción, esto debería obtenerse desde el convenio o los empleados
   const getBasicSalary = () => {
@@ -97,30 +98,19 @@ export function ConvenioCard({ convenio, onView, onEdit, onUploadDocument }) {
 
         <div className="action-buttons">
           <Tooltip content="Ver convenio completo" position="top">
-            <button
-              className="action-btn view"
+            <Button
+              variant="edit"
+              icon={Eye}
               onClick={() => onView(convenio.controller)}
-            >
-              <Eye className="action-icon" />
-            </button>
+            />
           </Tooltip>
 
           <Tooltip content="Editar convenio" position="top">
-            <button
-              className="action-btn edit"
+            <Button
+              variant="edit"
+              icon={Edit}
               onClick={() => onEdit && onEdit(convenio)}
-            >
-              <Edit className="action-icon" />
-            </button>
-          </Tooltip>
-
-          <Tooltip content="Subir documento" position="top">
-            <button
-              className="action-btn upload"
-              onClick={() => onUploadDocument && onUploadDocument(convenio)}
-            >
-              <Upload className="action-icon" />
-            </button>
+            />
           </Tooltip>
         </div>
       </div>

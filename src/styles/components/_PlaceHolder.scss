@@ -52,54 +52,67 @@
     }
   }
 
-  .stats-grid {
+  .stats-overview {
     display: grid;
     grid-template-columns: repeat(1, minmax(0, 1fr));
-    gap: $spacing-6;
+    gap: $spacing-4;
     margin-bottom: $spacing-6;
 
     @media (min-width: 768px) {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
+  }
 
-    .stat-card {
-      padding: $spacing-4;
-      cursor: pointer;
-      transition: box-shadow 0.3s ease;
+  // Mantener stats-grid para compatibilidad (deprecated)
+  .stats-grid {
+    @extend .stats-overview;
+  }
 
-      .stat-content {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+  .stat-card {
+    padding: $spacing-3 $spacing-4;
+    transition: box-shadow 0.3s ease;
+    cursor: pointer;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
 
-        .stat-info {
-          .stat-value {
-            font-size: $font-size-2xl;
-            font-weight: 700;
-            margin-bottom: $spacing-1;
+    .stat-label {
+      font-size: $font-size-sm;
+      color: $color-gray-500;
+      margin-bottom: $spacing-1;
+    }
 
-            &.warning {
-              color: $color-warning;
-            }
+    .stat-value {
+      font-size: $font-size-2xl;
+      font-weight: 700;
+      margin-top: 0;
 
-            &.success {
-              color: $color-success;
-            }
+      &.success {
+        color: $color-success;
+      }
 
-            &.primary {
-              color: $color-green-primary;
-            }
-          }
+      &.primary {
+        color: $color-green-primary;
+      }
 
-          .stat-label {
-            font-size: $font-size-sm;
-            color: $color-gray-500;
-          }
-        }
+      &.warning {
+        color: $color-warning;
+      }
 
-        .stat-icon {
-          width: 2rem;
-          height: 2rem;
+      &.default {
+        color: $color-gray-900;
+      }
+    }
+
+    // Estilos para cuando se muestra con icono (compatibilidad)
+    .stat-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      .stat-info {
+        .stat-value {
+          font-size: $font-size-2xl;
+          font-weight: 700;
+          margin-bottom: $spacing-1;
 
           &.warning {
             color: $color-warning;
@@ -112,6 +125,28 @@
           &.primary {
             color: $color-green-primary;
           }
+        }
+
+        .stat-label {
+          font-size: $font-size-sm;
+          color: $color-gray-500;
+        }
+      }
+
+      .stat-icon {
+        width: 2rem;
+        height: 2rem;
+
+        &.warning {
+          color: $color-warning;
+        }
+
+        &.success {
+          color: $color-success;
+        }
+
+        &.primary {
+          color: $color-green-primary;
         }
       }
     }

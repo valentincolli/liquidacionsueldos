@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Modal, ModalFooter } from '../Modal/Modal';
 import { User, DollarSign, Building, FileText, ListChecks } from 'lucide-react';
 import * as api from "../../services/empleadosAPI";
+import { Button } from '../ui/button';
 
 // Función helper para formatear moneda en formato argentino ($100.000,00)
 const formatCurrencyAR = (value) => {
@@ -421,20 +422,22 @@ export function EmployeeViewModal({ isOpen, onClose, employee, onLiquidarSueldo,
 
         {/* Botones de Acción */}
         <div className={'action-buttons'}>
-          <button 
-            className={`${'action-btn'} ${'primary'}`}
+          <Button 
+            variant="primary"
+            icon={DollarSign}
+            iconPosition="left"
             onClick={() => onLiquidarSueldo && onLiquidarSueldo(employee)}
           >
-            <DollarSign className="btn-icon" />
             Liquidar Sueldo
-          </button>
-          <button 
-            className={`${'action-btn'} ${'secondary'}`}
+          </Button>
+          <Button 
+            variant="secondary"
+            icon={FileText}
+            iconPosition="left"
             onClick={() => onHistorialLiquidaciones && onHistorialLiquidaciones(employee)}
           >
-            <FileText className="btn-icon" />
             Historial de Liquidaciones
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>

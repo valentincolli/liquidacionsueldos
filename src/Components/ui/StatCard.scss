@@ -1,0 +1,74 @@
+@import '../../styles/main.scss';
+
+.stat-card {
+  // Los estilos base ya están en los archivos de componentes existentes
+  // Este archivo puede usarse para estilos específicos del componente si es necesario
+  
+  .stat-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $spacing-4;
+  }
+
+  .stat-info {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-1;
+    flex: 1;
+  }
+
+  .stat-label {
+    font-size: $font-size-sm;
+    color: $color-gray-600;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .stat-value {
+    font-size: $font-size-2xl;
+    font-weight: 700;
+    line-height: 1.2;
+    margin: 0;
+
+    &.primary {
+      color: $color-green-primary;
+    }
+
+    &.success {
+      color: $color-success;
+    }
+
+    &.warning {
+      color: $color-warning;
+    }
+
+    &.default {
+      color: $color-gray-700;
+    }
+  }
+
+  .stat-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    flex-shrink: 0;
+    opacity: 0.8;
+
+    &.primary {
+      color: $color-green-primary;
+    }
+
+    &.success {
+      color: $color-success;
+    }
+
+    &.warning {
+      color: $color-warning;
+    }
+
+    &.default {
+      color: $color-gray-600;
+    }
+  }
+}
+

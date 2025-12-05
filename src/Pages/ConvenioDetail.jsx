@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, Download, Save, X, Printer, Calendar, Users, FileText } from 'lucide-react';
 import '../styles/components/_convenioDetail.scss';
 import * as api from '../services/empleadosAPI'
+import { Button } from '../Components/ui/button';
 
 export default function ConvenioDetail() {
   const { controller } = useParams();
@@ -344,36 +345,29 @@ export default function ConvenioDetail() {
 
           <div className="header-actions">
             <div className="header-actions-top">
-              <button className="back-btn-icon" onClick={handleGoBack}>
-                <ArrowLeft className="back-icon" />
-              </button>
+              <Button variant="back" icon={ArrowLeft} iconPosition="left" onClick={handleGoBack} />
             </div>
             <div className="header-actions-bottom">
             {isEditing ? (
               <>
-                <button className="action-btn save" onClick={handleSave}>
-                  <Save className="action-icon" />
+                <Button variant="save" icon={Save} iconPosition="left" onClick={handleSave}>
                   Guardar
-                </button>
-                <button className="action-btn cancel" onClick={handleCancel}>
-                  <X className="action-icon" />
+                </Button>
+                <Button variant="cancel" icon={X} iconPosition="left" onClick={handleCancel}>
                   Cancelar
-                </button>
+                </Button>
               </>
             ) : (
               <>
-                <button className="action-btn edit" onClick={handleEdit}>
-                  <Edit className="action-icon" />
+                <Button variant="edit" icon={Edit} iconPosition="left" onClick={handleEdit}>
                   Editar
-                </button>
-                <button className="action-btn download" onClick={handleDownload}>
-                  <Download className="action-icon" />
+                </Button>
+                <Button variant="download" icon={Download} iconPosition="left" onClick={handleDownload}>
                   Descargar
-                </button>
-                <button className="action-btn print" onClick={handleDownload}>
-                  <Printer className="action-icon" />
+                </Button>
+                <Button variant="print" icon={Printer} iconPosition="left" onClick={handleDownload}>
                   Imprimir
-                </button>
+                </Button>
               </>
             )}
             </div>

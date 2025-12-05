@@ -6,6 +6,8 @@ import { ConvenioCard } from '../Components/ConvenioCard/ConvenioCard.jsx';
 import { Modal, ModalFooter } from '../Components/Modal/Modal.jsx';
 import '../styles/components/_convenios.scss';
 import * as api from '../services/empleadosAPI';
+import { Button } from '../Components/ui/button';
+import { StatCard } from '../Components/ui/StatCard';
 
 export default function Convenios() {
   const navigate = useNavigate();
@@ -107,71 +109,25 @@ export default function Convenios() {
       </div>
 
       {/* Stats Summary */}
-      <div className="stats-grid">
-        <motion.div 
-          className="card stat-card"
-          whileHover={{ 
-            scale: 1.05,
-            y: -5,
-            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
-            transition: { duration: 0.2 }
-          }}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <div className="stat-content">
-            <div className="stat-info">
-              <div className="stat-value success">{convenios.length}</div>
-              <p className="stat-label">Convenios Activos</p>
-            </div>
-            <FileText className="stat-icon success" />
-          </div>
-        </motion.div>
-        <motion.div 
-          className="card stat-card"
-          whileHover={{ 
-            scale: 1.05,
-            y: -5,
-            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
-            transition: { duration: 0.2 }
-          }}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-        >
-          <div className="stat-content">
-            <div className="stat-info">
-              <div className="stat-value primary">
-                {totalEmpleados}
-              </div>
-              <p className="stat-label">Total Empleados</p>
-            </div>
-            <Users className="stat-icon primary" />
-          </div>
-        </motion.div>
-        <motion.div 
-          className="card stat-card"
-          whileHover={{ 
-            scale: 1.05,
-            y: -5,
-            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
-            transition: { duration: 0.2 }
-          }}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
-        >
-          <div className="stat-content">
-            <div className="stat-info">
-              <div className="stat-value warning">
-                ${salarioPromedio.toLocaleString('es-AR')}
-              </div>
-              <p className="stat-label">Salario Promedio</p>
-            </div>
-            <Calculator className="stat-icon warning" />
-          </div>
-        </motion.div>
+      <div className="stats-overview">
+        <StatCard
+          title="Convenios Activos"
+          value={convenios.length}
+          colorClass="success"
+          delay={0}
+        />
+        <StatCard
+          title="Total Empleados"
+          value={totalEmpleados}
+          colorClass="primary"
+          delay={0.1}
+        />
+        <StatCard
+          title="Salario Promedio"
+          value={`$${salarioPromedio.toLocaleString('es-AR')}`}
+          colorClass="warning"
+          delay={0.2}
+        />
       </div>
 
       {/* Convenios Cards */}
@@ -240,15 +196,15 @@ export default function Convenios() {
         )}
         
         <ModalFooter>
-          <button className="btn btn-secondary" onClick={closeModals}>
+          <Button variant="secondary" onClick={closeModals}>
             Cerrar
-          </button>
-          <button 
-            className="btn btn-primary" 
+          </Button>
+          <Button 
+            variant="primary" 
             onClick={() => handleEditConvenio(selectedConvenio)}
           >
             Editar Convenio
-          </button>
+          </Button>
         </ModalFooter>
       </Modal>
 
@@ -264,12 +220,12 @@ export default function Convenios() {
         </div>
         
         <ModalFooter>
-          <button className="btn btn-secondary" onClick={closeModals}>
+          <Button variant="secondary" onClick={closeModals}>
             Cancelar
-          </button>
-          <button className="btn btn-primary">
+          </Button>
+          <Button variant="primary">
             Guardar Cambios
-          </button>
+          </Button>
         </ModalFooter>
       </Modal>
 
@@ -303,9 +259,9 @@ export default function Convenios() {
         </div>
         
         <ModalFooter>
-          <button className="btn btn-secondary" onClick={closeModals}>
+          <Button variant="secondary" onClick={closeModals}>
             Cancelar
-          </button>
+          </Button>
         </ModalFooter>
       </Modal>
     </div>

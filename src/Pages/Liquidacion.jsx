@@ -7,6 +7,8 @@ import { useNotification } from '../Hooks/useNotification';
 import '../styles/components/_PlaceHolder.scss';
 import '../styles/components/_liquidacion.scss';
 import * as api from '../services/empleadosAPI'
+import { Button } from '../Components/ui/button';
+import { StatCard } from '../Components/ui/StatCard';
 
 export default function Liquidacion() {
   const notify = useNotification();
@@ -153,24 +155,26 @@ export default function Liquidacion() {
             Liquidación de Sueldos
           </h1>
         </div>
-        <button className="add-btn" onClick={() => setShowProcessModal(true)}>
-          <Plus className="btn-icon" />
+        <Button 
+          variant="primary"
+          icon={Plus}
+          iconPosition="left"
+          onClick={() => setShowProcessModal(true)}
+        >
           Nueva Liquidación
-        </button>
+        </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="stats-grid">
-        {statsList.map((s) => (
-          <div key={s.title} className="card stat-card">
-            <div className="stat-content">
-              <div className="stat-info">
-                <div className={`stat-value ${s.colorClass}`}>{s.value}</div>
-                <p className="stat-label">{s.title}</p>
-              </div>
-              {s.icon && <s.icon className={`stat-icon ${s.colorClass}`} />}
-            </div>
-          </div>
+      <div className="stats-overview">
+        {statsList.map((s, index) => (
+          <StatCard
+            key={s.title}
+            title={s.title}
+            value={s.value}
+            colorClass={s.colorClass}
+            delay={index * 0.1}
+          />
         ))}
       </div>
 
@@ -318,22 +322,18 @@ export default function Liquidacion() {
           </div>
           <div className="card-content">
             <div className="actions-list">
-              <button className="action-btn primary" onClick={() => setShowProcessModal(true)}>
-                <FileText className="action-icon" />
-                <span>Procesar Liquidación</span>
-              </button>
-              <button className="action-btn primary" onClick={() => navigate('/reportes')}>
-                <TrendingUp className="action-icon" />
-                <span>Generar Reportes</span>
-              </button>
-              <button className="action-btn primary" onClick={() => navigate('/historial-pagos')}>
-                <History className="action-icon" />
-                <span>Historial</span>
-              </button>
-              <button className="action-btn primary">
-                <Settings className="action-icon" />
-                <span>Configuración</span>
-              </button>
+              <Button variant="primary" icon={FileText} iconPosition="left" fullWidth onClick={() => setShowProcessModal(true)}>
+                Procesar Liquidación
+              </Button>
+              <Button variant="primary" icon={TrendingUp} iconPosition="left" fullWidth onClick={() => navigate('/reportes')}>
+                Generar Reportes
+              </Button>
+              <Button variant="primary" icon={History} iconPosition="left" fullWidth onClick={() => navigate('/historial-pagos')}>
+                Historial
+              </Button>
+              <Button variant="primary" icon={Settings} iconPosition="left" fullWidth>
+                Configuración
+              </Button>
             </div>
           </div>
         </div>
@@ -523,19 +523,17 @@ export default function Liquidacion() {
         )}
         
         <ModalFooter>
-          <button className="btn btn-secondary" onClick={() => setShowDetailModal(false)}>
+          <Button variant="secondary" onClick={() => setShowDetailModal(false)}>
             Cerrar
-          </button>
+          </Button>
           {selectedPayroll && (
             <>
-              <button className="btn btn-success" onClick={() => handlePrintPayroll(selectedPayroll)}>
-                <Printer className="h-4 w-4 mr-2" />
+              <Button variant="success" icon={Printer} iconPosition="left" onClick={() => handlePrintPayroll(selectedPayroll)}>
                 Imprimir
-              </button>
-              <button className="btn btn-primary" onClick={() => handleDownloadPayroll(selectedPayroll)}>
-                <Download className="h-4 w-4 mr-2" />
+              </Button>
+              <Button variant="primary" icon={Download} iconPosition="left" onClick={() => handleDownloadPayroll(selectedPayroll)}>
                 Descargar
-              </button>
+              </Button>
             </>
           )}
         </ModalFooter>

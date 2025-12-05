@@ -4,6 +4,7 @@ import { Search, Users, Download, Printer, Plus, X, CheckCircle, User, Calendar,
 import './ProcessPayrollModal.scss';
 import * as api from '../../services/empleadosAPI';
 import { useNotification } from '../../Hooks/useNotification';
+import { Button } from '../ui/button';
 
 // Función helper para formatear moneda en formato argentino ($100.000,00)
 const formatCurrencyAR = (value) => {
@@ -505,12 +506,12 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess, employees, ini
                           </div>
                         </td>
                         <td className="action-cell">
-                          <button 
-                            className="btn btn-liquidar" 
+                          <Button 
+                            variant="liquidar"
                             onClick={() => handleSelectEmployee(employee)}
                           >
                             Liquidar
-                          </button>
+                          </Button>
                         </td>
                       </tr>
                     ))}
@@ -526,9 +527,9 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess, employees, ini
             </div>
           </div>
           <div className="step-actions">
-            <button className="btn btn-secondary" onClick={resetModal}>
+            <Button variant="secondary" onClick={resetModal}>
               Cancelar
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -671,13 +672,12 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess, employees, ini
                             <option value="remuneration">Remuneración</option>
                             <option value="deduction">Descuento</option>
                           </select>
-                          <button
-                            className="remove-btn"
+                          <Button
+                            variant="remove"
+                            icon={X}
                             onClick={() => removeConcept(concept.id)}
                             title="Eliminar concepto"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
+                          />
                         </>
                       )}
                     </div>
@@ -685,10 +685,9 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess, employees, ini
                 </div>
               ))}
               <div className="concepts-table-footer">
-                <button className="btn btn-secondary" onClick={handleAddConcepto}>
-                  <Plus className="h-4 w-4 mr-2" />
+                <Button variant="secondary" icon={Plus} iconPosition="left" onClick={handleAddConcepto}>
                   Agregar Concepto
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -725,13 +724,12 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess, employees, ini
             </div>
           </div>
           <div className="step-actions">
-            <button className="btn btn-secondary" onClick={() => setCurrentStep('search')}>
+            <Button variant="secondary" onClick={() => setCurrentStep('search')}>
               Volver
-            </button>
-            <button className="btn btn-primary" onClick={generatePayroll} disabled={isProcessing}>
-              <CheckCircle className="h-4 w-4 mr-2" />
+            </Button>
+            <Button variant="primary" icon={CheckCircle} iconPosition="left" onClick={generatePayroll} disabled={isProcessing}>
               Generar Recibo
-            </button>
+            </Button>
           </div>
         </div>
       )}

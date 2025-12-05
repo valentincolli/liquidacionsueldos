@@ -6,6 +6,8 @@ import '../styles/components/_dashboard.scss';
 import * as api from '../services/empleadosAPI'
 import { ProcessPayrollModal } from '../Components/ProcessPayrollModal/ProcessPayrollModal';
 import { NewEmployeeModal } from '../Components/NewEmployeeModal/NewEmployeeModal';
+import { Button } from '../Components/ui/button';
+import { StatCard } from '../Components/ui/StatCard';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -144,28 +146,16 @@ export default function Dashboard() {
 
       {/* Stats Cards */}
       <div className="stats-overview">
-        {stats.map((stat) => {
-          return (
-            <motion.div 
-              key={stat.title} 
-              className="card stat-card"
-              whileHover={{ 
-                scale: 1.05,
-                y: -5,
-                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
-                transition: { duration: 0.2 }
-              }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <p className="stat-label">{stat.title}</p>
-              <div className={`stat-value ${stat.colorClass}`}>
-                {stat.value}
-              </div>
-            </motion.div>
-          );
-        })}
+        {stats.map((stat, index) => (
+          <StatCard
+            key={stat.title}
+            title={stat.title}
+            value={stat.value}
+            icon={stat.icon}
+            colorClass={stat.colorClass}
+            delay={index * 0.1}
+          />
+        ))}
       </div>
 
       <div className="main-grid">
@@ -217,34 +207,42 @@ export default function Dashboard() {
           </div>
           <div className="card-content">
             <div className="actions-list">
-              <button 
-                className="action-btn primary"
+              <Button 
+                variant="primary"
+                icon={Calculator}
+                iconPosition="left"
+                fullWidth
                 onClick={() => setShowProcessModal(true)}
               >
-                <Calculator className="action-icon" />
-                <span>Nueva Liquidación</span>
-              </button>
-              <button 
-                className="action-btn primary"
+                Nueva Liquidación
+              </Button>
+              <Button 
+                variant="primary"
+                icon={Users}
+                iconPosition="left"
+                fullWidth
                 onClick={() => setShowNewEmployeeModal(true)}
               >
-                <Users className="action-icon" />
-                <span>Agregar Empleado</span>
-              </button>
-              <button 
-                className="action-btn gray"
+                Agregar Empleado
+              </Button>
+              <Button 
+                variant="gray"
+                icon={TrendingUp}
+                iconPosition="left"
+                fullWidth
                 onClick={() => navigate('/reportes')}
               >
-                <TrendingUp className="action-icon" />
-                <span>Ver Reportes</span>
-              </button>
-              <button 
-                className="action-btn gray"
+                Ver Reportes
+              </Button>
+              <Button 
+                variant="gray"
+                icon={FileText}
+                iconPosition="left"
+                fullWidth
                 onClick={() => navigate('/convenios')}
               >
-                <FileText className="action-icon" />
-                <span>Gestionar Convenios</span>
-              </button>
+                Gestionar Convenios
+              </Button>
             </div>
           </div>
         </div>

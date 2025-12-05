@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, CheckCircle, Info, X } from 'lucide-react';
 import './ConfirmDialog.scss';
+import { Button } from '../ui/button';
 
 let confirmId = 0;
 let confirmResolve = null;
@@ -132,18 +133,18 @@ export const ConfirmDialog = () => {
           </div>
 
           <div className="confirm-footer">
-            <button
-              className={`btn btn-${dialog.cancelButtonVariant}`}
+            <Button
+              variant={dialog.cancelButtonVariant}
               onClick={handleCancel}
             >
               {dialog.cancelText}
-            </button>
-            <button
-              className={`btn btn-${dialog.confirmButtonVariant}`}
+            </Button>
+            <Button
+              variant={dialog.confirmButtonVariant}
               onClick={handleConfirm}
             >
               {dialog.confirmText}
-            </button>
+            </Button>
           </div>
         </motion.div>
       </motion.div>

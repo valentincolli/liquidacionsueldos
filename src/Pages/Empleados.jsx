@@ -9,6 +9,8 @@ import { ProcessPayrollModal } from '../Components/ProcessPayrollModal/ProcessPa
 import { Tooltip } from '../Components/ToolTip/ToolTip';
 import * as api from '../services/empleadosAPI'
 import '../styles/components/_employees.scss';
+import { Button } from '../Components/ui/button';
+import { StatCard } from '../Components/ui/StatCard';
 
 export default function Empleados() {
   const [employees, setEmployees] = useState([]);
@@ -205,78 +207,36 @@ export default function Empleados() {
             Gestión de Empleados
           </h1>
         </div>
-        <button className="add-employee-btn" onClick={() => setShowNewEmployeeModal(true)}>
-          <Plus className="btn-icon" />
+        <Button 
+          variant="primary"
+          icon={Plus}
+          iconPosition="left"
+          onClick={() => setShowNewEmployeeModal(true)}
+        >
           Nuevo Empleado
-        </button>
+        </Button>
       </div>
 
       {/* Stats Summary */}
       <div className="stats-overview">
-        <motion.div 
-          className="card stat-card"
-          whileHover={{ 
-            scale: 1.05,
-            y: -5,
-            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
-            transition: { duration: 0.2 }
-          }}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <p className="stat-label">Total Empleados</p>
-          <div className="stat-value success">{employees.length}</div>
-        </motion.div>
-        <motion.div 
-          className="card stat-card"
-          whileHover={{ 
-            scale: 1.05,
-            y: -5,
-            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
-            transition: { duration: 0.2 }
-          }}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-        >
-          <p className="stat-label">Empleados Activos</p>
-          <div className="stat-value primary">
-            {employees.filter(emp => emp.estado === 'ACTIVO').length}
-          </div>
-        </motion.div>
-        <motion.div 
-          className="card stat-card"
-          whileHover={{ 
-            scale: 1.05,
-            y: -5,
-            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
-            transition: { duration: 0.2 }
-          }}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
-        >
-          <p className="stat-label">Dados de baja</p>
-          <div className="stat-value warning">
-            {employees.filter(emp => emp.estado === 'DADO_DE_BAJA').length}
-          </div>
-        </motion.div>
-        <motion.div 
-          className="card stat-card"
-          whileHover={{ 
-            scale: 1.05,
-            y: -5,
-            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
-            transition: { duration: 0.2 }
-          }}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.3 }}
-        >
-          <p className="stat-label">Areas</p>
-          <div className="stat-value default">{areas.length}</div>
-        </motion.div>
+        <StatCard
+          title="Total Empleados"
+          value={employees.length}
+          colorClass="success"
+          delay={0}
+        />
+        <StatCard
+          title="Empleados Activos"
+          value={employees.filter(emp => emp.estado === 'ACTIVO').length}
+          colorClass="primary"
+          delay={0.1}
+        />
+        <StatCard
+          title="Dados de baja"
+          value={employees.filter(emp => emp.estado === 'DADO_DE_BAJA').length}
+          colorClass="warning"
+          delay={0.2}
+        />
       </div>
 
       {/* Filters */}
