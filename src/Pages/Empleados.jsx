@@ -11,6 +11,7 @@ import * as api from '../services/empleadosAPI'
 import '../styles/components/_employees.scss';
 import { Button } from '../Components/ui/button';
 import { StatCard } from '../Components/ui/StatCard';
+import { LoadingSpinner } from '../Components/ui/LoadingSpinner';
 
 export default function Empleados() {
   const [employees, setEmployees] = useState([]);
@@ -358,6 +359,13 @@ export default function Empleados() {
         </div>
         <div className="card-content employees-content">
           <div className="employees-table">
+            {loading ? (
+              <LoadingSpinner message="Cargando empleados..." size="md" className="list-loading" />
+            ) : error ? (
+              <div style={{ padding: '2rem', textAlign: 'center', color: '#dc2626' }}>
+                <p>Error: {error}</p>
+              </div>
+            ) : (
             <div className="employees-list">
               {filtered.map((employee) => (
                 <div 
@@ -440,6 +448,7 @@ export default function Empleados() {
                 </div>
               ))}
             </div>
+            )}
           </div>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { Modal, ModalFooter } from '../Modal/Modal';
 import { User, DollarSign, Building, FileText, ListChecks } from 'lucide-react';
 import * as api from "../../services/empleadosAPI";
 import { Button } from '../ui/button';
+import { LoadingSpinner } from '../ui/LoadingSpinner';
 
 // Función helper para formatear moneda en formato argentino ($100.000,00)
 const formatCurrencyAR = (value) => {
@@ -372,7 +373,7 @@ export function EmployeeViewModal({ isOpen, onClose, employee, onLiquidarSueldo,
               Conceptos Asignados
             </h3>
             {loadingConceptos ? (
-              <p className="conceptos-empty-message">Cargando conceptos...</p>
+              <LoadingSpinner message="Cargando conceptos..." size="md" className="table-loading" />
             ) : conceptosAsignados.length === 0 ? (
               <p className="conceptos-empty-message">
                 No hay conceptos asignados a este empleado

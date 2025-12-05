@@ -8,6 +8,7 @@ import '../styles/components/_convenios.scss';
 import * as api from '../services/empleadosAPI';
 import { Button } from '../Components/ui/button';
 import { StatCard } from '../Components/ui/StatCard';
+import { LoadingSpinner } from '../Components/ui/LoadingSpinner';
 
 export default function Convenios() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ export default function Convenios() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedConvenio, setSelectedConvenio] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const normalizeConvenios = (rows) =>
     rows.map((c,i) => ({
@@ -34,10 +36,13 @@ export default function Convenios() {
   useEffect(() => {
   const loadConvenios = async () => {
     try {
+      setLoading(true);
       const response = await api.getConvenios();
       setConvenios(normalizeConvenios(response));
     } catch (err) {
       console.error("Error cargando convenios:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -95,6 +100,22 @@ export default function Convenios() {
   // Calcular salario promedio (aproximado basado en valores típicos)
   // En producción, esto debería calcularse desde los empleados reales
   const salarioPromedio = totalEmpleados > 0 ? Math.round((285000 + 260000) / 2) : 0;
+
+  if (loading) {
+    return (
+      <div className="placeholder-page">
+        <div className="page-header">
+          <div className="header-content">
+            <h1 className="title title-gradient animated-title">
+              Gestión de Convenios
+            </h1>
+            <p className="subtitle">Administra los convenios colectivos de trabajo y sus escalas salariales</p>
+          </div>
+        </div>
+        <LoadingSpinner message="Cargando convenios..." size="lg" className="list-loading" />
+      </div>
+    );
+  }
 
   return (
     <div className="placeholder-page">

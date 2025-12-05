@@ -886,4 +886,58 @@
     }
     }
   }
+
+  /* Sección SON PESOS en el recibo */
+  .amount-words-section {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--bg-light, #f9fafb);
+    border: 1px solid var(--border-color, #e5e7eb);
+    font-size: 0.85rem;
+
+    .amount-words-label {
+      font-weight: 600;
+      color: var(--text-secondary, #6b7280);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    .amount-words-input {
+      flex: 1;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--border-color, #e5e7eb);
+      border-radius: 4px;
+      font-size: 0.9rem;
+      color: var(--text-primary, #111827);
+      background: white;
+      font-family: 'Courier New', monospace;
+      transition: border-color 0.2s ease;
+
+      &:focus {
+        outline: none;
+        border-color: var(--primary-color, #22c55e);
+        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
+      }
+
+      &::placeholder {
+        color: var(--text-secondary, #6b7280);
+        opacity: 0.6;
+      }
+    }
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+
+      .amount-words-input {
+        width: 100%;
+      }
+    }
+  }
 }

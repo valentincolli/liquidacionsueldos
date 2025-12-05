@@ -33,6 +33,7 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess, employees, ini
   const [basicSalary, setBasicSalary] = useState(0);
   const [descuentosData, setDescuentosData] = useState([]);
   const [remunerationAssigned, setRemunerationAssigned] = useState(0);
+  const [amountInWords, setAmountInWords] = useState('');
 
   // Función para formatear el nombre del gremio
   const formatGremioNombre = (gremioNombre) => {
@@ -429,6 +430,7 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess, employees, ini
   };
 
   // Descargar recibo
+
   const handleDownload = () => {
     const link = document.createElement('a');
     link.href = 'data:text/plain;charset=utf-8,Recibo de Sueldo - ' + selectedEmployee?.nombre;
@@ -737,26 +739,12 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess, employees, ini
       {/* STEP 3: RECEIPT PREVIEW */}
       {currentStep === 'preview' && selectedEmployee && (
         <div className="receipt-preview">
-          <div className="section-header-enhanced">
-            <div className="step-indicator">
-              <span className="step-number">3</span>
-              <Star className="step-star" />
-            </div>
-            <div className="header-content">
-              <p className="section-subtitle">Revisa y confirma la liquidación antes de imprimir</p>
-            </div>
-          </div>
-
           <div className="receipt-container">
             {/* ENCABEZADO DEL RECIBO */}
             <div className="receipt-header-wrapper">
               <div className="company-logo">
                 <div className="logo-box">
-                  <div className="logo-text">
-                    Marca
-                    <br />
-                    Empresa
-                  </div>
+                  <img src="/logo192.png" alt="Logo Empresa" className="logo-image" />
                 </div>
               </div>
 
@@ -884,6 +872,22 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess, employees, ini
               </div>
             </div>
 
+            {/* SON PESOS */}
+            <div className="amount-words-section">
+              <label className="amount-words-label">SON PESOS:</label>
+              <input
+                type="text"
+                className="amount-words-input"
+                value={amountInWords}
+                onChange={(e) => {
+                  // Solo permite letras, espacios y caracteres especiales comunes en español
+                  const value = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+                  setAmountInWords(value);
+                }}
+                placeholder="Escriba el monto en palabras..."
+              />
+            </div>
+
             {/* PIE DEL RECIBO */}
             <div className="receipt-footer">
               <p className="footer-text">
@@ -899,6 +903,19 @@ export function ProcessPayrollModal({ isOpen, onClose, onProcess, employees, ini
                   <span className="label">Firma del Empleado</span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Footer con párrafo y botones */}
+          <div className="receipt-preview-footer">
+            <p className="receipt-preview-text">Revisa la liquidación antes de imprimir</p>
+            <div className="receipt-preview-actions">
+              <Button variant="secondary" onClick={() => setCurrentStep('search')}>
+                Volver
+              </Button>
+              <Button variant="primary" icon={Printer} iconPosition="left" onClick={handlePrint}>
+                Imprimir
+              </Button>
             </div>
           </div>
         </div>

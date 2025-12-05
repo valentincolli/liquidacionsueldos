@@ -8,6 +8,7 @@ import { ProcessPayrollModal } from '../Components/ProcessPayrollModal/ProcessPa
 import { NewEmployeeModal } from '../Components/NewEmployeeModal/NewEmployeeModal';
 import { Button } from '../Components/ui/button';
 import { StatCard } from '../Components/ui/StatCard';
+import { LoadingSpinner } from '../Components/ui/LoadingSpinner';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ export default function Dashboard() {
   const [showNewEmployeeModal, setShowNewEmployeeModal] = useState(false);
   const [employees, setEmployees] = useState([]);
   const [dashboardStats, setDashboardStats] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const countActiveEmployees = async () => {
     try {
@@ -59,6 +61,8 @@ export default function Dashboard() {
       setDashboardStats(data || null);
     } catch (error) {
       console.error('Error al cargar estadísticas del dashboard:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -134,6 +138,19 @@ export default function Dashboard() {
       amount: '$52,300'
     }
   ];
+
+  if (loading) {
+    return (
+      <div className="dashboard">
+        <div className="dashboard-header">
+          <h1 className="title title-gradient animated-title">
+            Gestión de Sueldos
+          </h1>
+        </div>
+        <LoadingSpinner message="Cargando dashboard..." size="lg" className="list-loading" />
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard">
@@ -232,7 +249,7 @@ export default function Dashboard() {
                 fullWidth
                 onClick={() => navigate('/reportes')}
               >
-                Ver Reportes
+                Estadísticas
               </Button>
               <Button 
                 variant="gray"

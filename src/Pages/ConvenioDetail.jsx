@@ -4,6 +4,7 @@ import { ArrowLeft, Edit, Download, Save, X, Printer, Calendar, Users, FileText 
 import '../styles/components/_convenioDetail.scss';
 import * as api from '../services/empleadosAPI'
 import { Button } from '../Components/ui/button';
+import { LoadingSpinner } from '../Components/ui/LoadingSpinner';
 
 export default function ConvenioDetail() {
   const { controller } = useParams();
@@ -312,7 +313,7 @@ export default function ConvenioDetail() {
   if (!convenio) {
     return (
       <div className="convenio-detail">
-        <div className="loading">Cargando convenio...</div>
+        <LoadingSpinner message="Cargando convenio..." size="lg" className="list-loading" />
       </div>
     );
   }

@@ -5,6 +5,7 @@ import * as api from '../services/empleadosAPI';
 import '../styles/components/_PlaceHolder.scss';
 import '../styles/components/_liquidacion.scss';
 import '../styles/components/_historialPagos.scss';
+import { LoadingSpinner } from '../Components/ui/LoadingSpinner';
 
 export default function HistorialPagos() {
   const navigate = useNavigate();
@@ -140,9 +141,7 @@ export default function HistorialPagos() {
 
             {/* Content */}
             {loading ? (
-              <div style={{ padding: '2rem', textAlign: 'center' }}>
-                <p>Cargando pagos...</p>
-              </div>
+              <LoadingSpinner message="Cargando pagos..." size="md" className="list-loading" />
             ) : filteredPagos.length > 0 ? (
               <div className="employee-list">
                 {filteredPagos.map((pago) => (

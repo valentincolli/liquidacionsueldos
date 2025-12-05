@@ -16,66 +16,36 @@
 }
 
 .process-payroll-modal {
-  // Enhanced section headers with step indicators
-  .section-header-enhanced {
+  // Footer del preview del recibo
+  .receipt-preview-footer {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: $spacing-4;
-    margin-bottom: $spacing-6;
-    padding: $spacing-4;
-    background: linear-gradient(135deg, rgba(34, 197, 94, 0.05), rgba(34, 197, 94, 0.02));
-    border-radius: $border-radius-lg;
-    border-left: 4px solid $color-green-primary;
+    margin-top: $spacing-6;
+    padding-top: $spacing-4;
+    border-top: 1px solid $color-gray-200;
 
-    .step-indicator {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 3rem;
-      height: 3rem;
-      background: linear-gradient(135deg, $color-green-primary, $color-green-dark);
-      border-radius: 50%;
-      color: white;
-      font-weight: bold;
-      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
-
-      .step-number {
-        font-size: $font-size-lg;
-        font-weight: 700;
-      }
-
-      .step-star {
-        position: absolute;
-        top: -4px;
-        right: -4px;
-        width: 1rem;
-        height: 1rem;
-        background: $color-yellow-primary;
-        border-radius: 50%;
-        padding: 2px;
-        color: white;
-      }
+    .receipt-preview-text {
+      font-size: $font-size-base;
+      font-weight: 600;
+      color: $color-gray-700;
+      margin: 0;
     }
 
-    .header-content {
-      flex: 1;
+    .receipt-preview-actions {
+      display: flex;
+      gap: $spacing-3;
+      align-items: center;
+    }
 
-      .section-title {
-        font-size: $font-size-xl;
-        font-weight: 700;
-        color: $color-gray-900;
-        margin: 0 0 $spacing-1 0;
-        background: linear-gradient(135deg, $color-green-primary, $color-green-dark);
-        background-clip: text;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-      }
+    @media (max-width: 768px) {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: $spacing-3;
 
-      .section-subtitle {
-        font-size: $font-size-sm;
-        color: $color-gray-600;
-        margin: 0;
+      .receipt-preview-actions {
+        width: 100%;
+        justify-content: flex-end;
       }
     }
   }
@@ -968,15 +938,19 @@
             .logo-circle {
               width: 3rem;
               height: 3rem;
-              background: linear-gradient(135deg, $color-green-primary, $color-green-dark);
+              background: white;
               border-radius: 50%;
               display: flex;
               align-items: center;
               justify-content: center;
-              color: white;
-              font-size: $font-size-xl;
-              font-weight: bold;
-              box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+              overflow: hidden;
+              border: 1px solid $color-gray-300;
+
+              .logo-image {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+              }
             }
           }
 
@@ -1061,9 +1035,10 @@
           grid-template-columns: 100px 200px 80px 100px 100px;
           gap: $spacing-2;
           padding: $spacing-2;
-          background: $color-gray-100;
+          background: $color-white;
           font-weight: bold;
-          border-bottom: 2px solid $color-gray-900;
+          border-bottom: 2px solid $color-green-primary;
+          color: $color-gray-900;
 
           span {
             text-align: center;
@@ -1121,24 +1096,23 @@
           font-weight: bold;
           font-size: $font-size-base;
           padding: $spacing-2;
-          background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05));
-          border: 1px solid rgba(34, 197, 94, 0.2);
+          background: $color-white;
+          border: 2px solid $color-green-primary;
           border-radius: $border-radius;
 
-          .final-amount {
+          span:first-child {
             color: $color-green-primary;
+            font-weight: 600;
+          }
+
+          .final-amount {
+            color: $color-gray-900;
             font-size: $font-size-lg;
             font-weight: 700;
           }
 
           .amount-indicator {
-            position: absolute;
-            right: -2px;
-            top: 0;
-            bottom: 0;
-            width: 4px;
-            background: linear-gradient(135deg, $color-green-primary, $color-green-dark);
-            border-radius: 0 $border-radius $border-radius 0;
+            display: none;
           }
         }
       }
@@ -1307,12 +1281,12 @@
         background: white;
         text-align: center;
         padding: 0.5rem;
+        overflow: hidden;
 
-        .logo-text {
-          font-weight: bold;
-          font-size: 0.75rem;
-          line-height: 1.2;
-          color: var(--text-primary);
+        .logo-image {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
         }
       }
     }
@@ -1403,15 +1377,16 @@
     font-size: 0.85rem;
 
     thead {
-      background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-      color: white;
+      background: rgba(243, 244, 246, 0.5);
+      color: $color-gray-900;
+      border-bottom: 2px solid $color-green-primary;
 
       tr {
         th {
           padding: 0.75rem;
           text-align: left;
           font-weight: 600;
-          border: 1px solid rgba(255, 255, 255, 0.2);
+          border: 1px solid $color-gray-300;
 
           &:last-child {
             text-align: right;
@@ -1521,8 +1496,8 @@
     }
 
     .totals-highlight {
-      background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-      color: white;
+      background: $color-white;
+      border: 2px solid $color-green-primary;
       padding: 1rem;
       border-radius: 8px;
       display: flex;
@@ -1530,18 +1505,20 @@
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
-      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
       .amount-label {
         font-size: 0.85rem;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        color: $color-green-primary;
       }
 
       .amount-value {
         font-size: 1.5rem;
         font-weight: bold;
+        color: $color-gray-900;
       }
     }
 
@@ -1582,6 +1559,60 @@
 
     @media (max-width: 768px) {
       grid-template-columns: 1fr;
+    }
+  }
+
+  /* Sección SON PESOS */
+  .amount-words-section {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    font-size: 0.85rem;
+
+    .amount-words-label {
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    .amount-words-input {
+      flex: 1;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      background: white;
+      font-family: 'Courier New', monospace;
+      transition: border-color 0.2s ease;
+
+      &:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
+      }
+
+      &::placeholder {
+        color: var(--text-secondary);
+        opacity: 0.6;
+      }
+    }
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+
+      .amount-words-input {
+        width: 100%;
+      }
     }
   }
 
@@ -1655,6 +1686,10 @@
           background: var(--bg-light);
         }
       }
+    }
+
+    .receipt-preview-footer {
+      display: none;
     }
   }
 }

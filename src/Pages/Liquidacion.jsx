@@ -9,6 +9,7 @@ import '../styles/components/_liquidacion.scss';
 import * as api from '../services/empleadosAPI'
 import { Button } from '../Components/ui/button';
 import { StatCard } from '../Components/ui/StatCard';
+import { LoadingSpinner } from '../Components/ui/LoadingSpinner';
 
 export default function Liquidacion() {
   const notify = useNotification();
@@ -25,6 +26,8 @@ export default function Liquidacion() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Todos');
   const [dashboardStats, setDashboardStats] = useState(null);
+  const [amountInWords, setAmountInWords] = useState('');
+  const [loading, setLoading] = useState(true);
   
   const loadPayrolls = async () => {
     try {
@@ -46,9 +49,16 @@ export default function Liquidacion() {
   };
   
   useEffect(() => {
-    loadEmployees();
-    loadPayrolls();
-    loadDashboardStats();
+    const loadAll = async () => {
+      setLoading(true);
+      await Promise.all([
+        loadEmployees(),
+        loadPayrolls(),
+        loadDashboardStats()
+      ]);
+      setLoading(false);
+    };
+    loadAll();
   }, []);
 
   const loadDashboardStats = async () => {
@@ -145,6 +155,21 @@ export default function Liquidacion() {
       colorClass: 'success'
     }
   ];
+
+  if (loading) {
+    return (
+      <div className="placeholder-page">
+        <div className="page-header">
+          <div className="header-content">
+            <h1 className="title title-gradient animated-title">
+              Liquidación de Sueldos
+            </h1>
+          </div>
+        </div>
+        <LoadingSpinner message="Cargando liquidaciones..." size="lg" className="list-loading" />
+      </div>
+    );
+  }
 
   return (
     <div className="placeholder-page">
@@ -326,7 +351,7 @@ export default function Liquidacion() {
                 Procesar Liquidación
               </Button>
               <Button variant="primary" icon={TrendingUp} iconPosition="left" fullWidth onClick={() => navigate('/reportes')}>
-                Generar Reportes
+                Estadísticas
               </Button>
               <Button variant="primary" icon={History} iconPosition="left" fullWidth onClick={() => navigate('/historial-pagos')}>
                 Historial
@@ -359,9 +384,7 @@ export default function Liquidacion() {
         className="process-payroll-modal"
       >
         {loadingDetails ? (
-          <div style={{ padding: '2rem', textAlign: 'center' }}>
-            <p>Cargando detalles...</p>
-          </div>
+          <LoadingSpinner message="Cargando detalles..." size="md" className="table-loading" />
         ) : selectedPayroll && payrollDetails && (
           <div className="receipt-preview">
             <div className="receipt-container">
@@ -374,7 +397,7 @@ export default function Liquidacion() {
                 <div className="company-info">
                   <div className="company-logo">
                     <div className="logo-circle">
-                      <span>C</span>
+                      <img src="/logo192.png" alt="Logo Empresa" className="logo-image" />
                     </div>
                   </div>
                   <div className="company-details">
@@ -506,8 +529,19 @@ export default function Liquidacion() {
                       const netAmount = (payrollDetails.total || payrollDetails.total_neto || selectedPayroll.total_neto || remunerations - deductions);
 
                       return (
-                        <div className="amount-words">
-                          <span>SON PESOS: {netAmount.toLocaleString('es-AR')} * * * *</span>
+                        <div className="amount-words-section">
+                          <label className="amount-words-label">SON PESOS:</label>
+                          <input
+                            type="text"
+                            className="amount-words-input"
+                            value={amountInWords}
+                            onChange={(e) => {
+                              // Solo permite letras, espacios y caracteres especiales comunes en español
+                              const value = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+                              setAmountInWords(value);
+                            }}
+                            placeholder="Escriba el monto en palabras..."
+                          />
                         </div>
                       );
                     })()}

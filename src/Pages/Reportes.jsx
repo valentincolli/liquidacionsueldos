@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
 import * as api from '../services/empleadosAPI';
 import '../styles/components/_reportes.scss';
+import { LoadingSpinner } from '../Components/ui/LoadingSpinner';
 
 export default function Reportes() {
   const navigate = useNavigate();
@@ -156,9 +157,7 @@ export default function Reportes() {
       </div>
 
       {loading ? (
-        <div className="loading-state">
-          <p>Cargando reportes...</p>
-        </div>
+        <LoadingSpinner message="Cargando reportes..." size="lg" className="list-loading" />
       ) : (
         <>
           <div className="reportes-summary">
